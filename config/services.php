@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // Populated at boot from the root config.php by ConfigBridgeServiceProvider.
+    // Used by Laravel Socialite for "Sign in with Google".
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID', ''),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET', ''),
+        'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
+    ],
+
 ];

@@ -7,6 +7,7 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/designer.js',
+                'resources/js/booking.js',
             ],
             refresh: true,
         }),

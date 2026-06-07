@@ -182,9 +182,11 @@ function addTableNode(t) {
   const shape = makeTableShape(t);
   const label = new Konva.Text({ text: t.label || '', fontFamily: 'JetBrains Mono, monospace', fontSize: 28, fill: C.labelFill });
   const price = new Konva.Text({ text: money(t.price), fontFamily: 'JetBrains Mono, monospace', fontSize: 20, fill: C.priceFill });
-  g.add(shape, label, price);
-  g._shape = shape; g._label = label; g._price = price;
+  const powerBadge = new Konva.Text({ text: '⚡', fontSize: 26, fill: C.doorFill, listening: false, visible: !!t.has_power });
+  g.add(shape, label, price, powerBadge);
+  g._shape = shape; g._label = label; g._price = price; g._powerBadge = powerBadge;
   recenter(label, 0, -16); recenter(price, 0, 14);
+  positionPowerBadge(g);
   g.on('transformend', () => {
     const sx = g.scaleX(), sy = g.scaleY();
     g.scale({ x: 1, y: 1 });
@@ -208,6 +210,13 @@ function resizeTableShape(g) {
   const t = g._model;
   if (t.shape === 'round') { g._shape.radiusX(t.width / 2); g._shape.radiusY(t.height / 2); }
   else { g._shape.width(t.width); g._shape.height(t.height); g._shape.x(-t.width / 2); g._shape.y(-t.height / 2); }
+  positionPowerBadge(g);
+}
+// Tuck the ⚡ badge into the table's top-right corner.
+function positionPowerBadge(g) {
+  if (!g._powerBadge) return;
+  const t = g._model;
+  g._powerBadge.position({ x: t.width / 2 - g._powerBadge.width() - 6, y: -t.height / 2 + 4 });
 }
 function rebuildTableShape(g) {
   g._shape.destroy();
@@ -303,7 +312,7 @@ function relativePointer() {
 }
 
 function modelFromPreset(kind, p, x, y) {
-  if (kind === 'table') return { id: null, label: 'T' + (tables.length + 1), x, y, width: p.width, height: p.height, rotation: 0, shape: p.shape || 'rect', price: 0, status: 'available' };
+  if (kind === 'table') return { id: null, label: 'T' + (tables.length + 1), x, y, width: p.width, height: p.height, rotation: 0, shape: p.shape || 'rect', price: 0, status: 'available', has_power: false };
   if (kind === 'door') return { id: null, label: null, type: p.type || 'entrance', x, y, width: p.width, rotation: 0 };
   return { id: null, label: null, x, y, amperage: p.amperage ?? 15, voltage: p.voltage ?? 120, outlets: p.outlets ?? 1 };
 }
@@ -428,6 +437,7 @@ function wirePanel() {
   on('t_rotation', 'input', () => { selected._model.rotation = Number(val('t_rotation')); selected.rotation(selected._model.rotation); });
   on('t_shape', 'change', () => { selected._model.shape = val('t_shape'); rebuildTableShape(selected); });
   on('t_status', 'change', () => { selected._model.status = val('t_status'); applyStyle(selected._shape, selected._model.status); });
+  on('t_power', 'change', () => { selected._model.has_power = document.getElementById('t_power').checked; selected._powerBadge.visible(selected._model.has_power); layer.batchDraw(); });
   on('d_label', 'input', () => { selected._model.label = val('d_label'); });
   on('d_type', 'change', () => { selected._model.type = val('d_type'); });
   on('d_width', 'input', () => { const w = Number(val('d_width')); selected._model.width = w; selected.width(w); selected.offsetX(w / 2); });
@@ -446,6 +456,7 @@ function populatePanel() {
   if (selected._kind === 'table') {
     setVal('t_label', m.label || ''); setVal('t_price', m.price); setVal('t_width', m.width); setVal('t_height', m.height);
     setVal('t_rotation', Math.round(selected.rotation())); setVal('t_shape', m.shape); setVal('t_status', m.status);
+    document.getElementById('t_power').checked = !!m.has_power;
   } else if (selected._kind === 'door') {
     setVal('d_label', m.label || ''); setVal('d_type', m.type); setVal('d_width', m.width); setVal('d_rotation', Math.round(selected.rotation()));
   } else if (selected._kind === 'power') {

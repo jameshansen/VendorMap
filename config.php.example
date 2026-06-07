@@ -1,0 +1,127 @@
+<?php
+
+/*
+|------------------------------------------------------------------------------
+| VendorMap site configuration
+|------------------------------------------------------------------------------
+|
+| Copy this file to "config.php" (same folder) and edit the values below.
+| The real config.php is git-ignored so your secrets never get committed.
+|
+|   cp config.php.example config.php
+|
+| These settings are loaded at boot by App\Providers\ConfigBridgeServiceProvider
+| and bridged into Laravel's own config (mail, services, etc.). You do NOT need
+| to touch the .env file for any of the things configured here.
+|
+*/
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Site name
+    |--------------------------------------------------------------------------
+    | Shown in the public header and used for the admin header ("<name> Admin").
+    */
+    'app_name' => 'VendorMap',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin panel login
+    |--------------------------------------------------------------------------
+    | Credentials for the admin area at /admin (designer, event management and
+    | vendor approvals). Stored in plain text for now — change them here.
+    */
+    'admin' => [
+        'username' => 'admin',
+        'password' => 'change-me',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Outgoing email (SMTP)
+    |--------------------------------------------------------------------------
+    | Used to (a) alert an admin when a new vendor signs up, and (b) email a
+    | vendor when their account is approved or rejected. Leave "host" blank to
+    | disable real sending — messages are written to the Laravel log instead,
+    | and signups still succeed.
+    */
+    'smtp' => [
+        'host'         => '',                    // e.g. smtp.gmail.com  (blank = log only)
+        'port'         => 587,                   // 587 for TLS, 465 for SSL
+        'username'     => '',
+        'password'     => '',
+        'encryption'   => 'tls',                 // 'tls', 'ssl', or null for none
+        'from_address' => 'no-reply@example.com',// the "From" address on outgoing mail
+        'from_name'    => 'VendorMap',
+        'admin_notify' => '',                    // address that receives new-signup alerts (blank = no alert)
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google sign-in (OAuth via Laravel Socialite)
+    |--------------------------------------------------------------------------
+    | Create credentials at https://console.cloud.google.com/apis/credentials
+    | and add the redirect URL below to the "Authorized redirect URIs".
+    | Leave "client_id" blank to hide the "Sign in with Google" button — the
+    | site then falls back to normal email/password sign-up.
+    */
+    'google_oauth' => [
+        'client_id'     => '',
+        'client_secret' => '',
+        'redirect'      => '/auth/google/callback', // must match the Google console entry
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Google reCAPTCHA (optional, anti-bot)
+    |--------------------------------------------------------------------------
+    | Optional extra protection on the sign-up form. Get keys from
+    | https://www.google.com/recaptcha/admin (reCAPTCHA v2 "I'm not a robot").
+    | Leave blank to rely on the built-in honeypot + timing + rate-limiting
+    | protections only.
+    */
+    'recaptcha' => [
+        'site_key'   => '',
+        'secret_key' => '',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Booking rules
+    |--------------------------------------------------------------------------
+    */
+    'booking' => [
+        // Maximum number of tables a single vendor may hold for one event.
+        // Increase to allow vendors to book multiple stalls.
+        'tables_per_vendor' => 1,
+
+        // What happens when an approved vendor picks a table:
+        //   true  => the table is booked instantly (status becomes "booked").
+        //   false => the table is "held" and an admin must confirm it before
+        //            it counts as booked.
+        'auto_approve_booking' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Demo mode (public sandbox)
+    |--------------------------------------------------------------------------
+    | When enabled, the site stops using the main database for visitor data and
+    | instead hands each visitor one of a fixed POOL of pre-seeded MySQL
+    | databases (a "slot"). A cookie remembers which slot they're on. When all
+    | slots are busy, the least-recently-used one is recycled (reset to the demo
+    | baseline) and given to the new visitor — so the central database is never
+    | touched and nothing is created/dropped at runtime.
+    |
+    | One-time setup (creates + seeds the pool):  php artisan demo:setup
+    | The MySQL user needs CREATE privileges for that one command only.
+    */
+    'demo' => [
+        'enabled'   => false,             // turn the sandbox on for the public demo host
+        'pool_size' => 25,                // how many concurrent visitors get isolated data
+        'db_prefix' => 'vendormap_demo_', // slot databases: vendormap_demo_1 .. _25
+    ],
+
+];

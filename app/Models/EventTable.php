@@ -16,6 +16,7 @@ class EventTable extends Model
 
     protected $fillable = [
         'event_id',
+        'venue_id',
         'vendor_id',
         'label',
         'x',
@@ -26,6 +27,10 @@ class EventTable extends Model
         'shape',     // rect | round
         'price',
         'status',    // available | held | booked
+        'has_power', // electrical power available at this table
+        'booked_at',
+        'paid',      // booking has been paid for (marked by an admin)
+        'paid_at',
         'notes',
     ];
 
@@ -38,6 +43,10 @@ class EventTable extends Model
             'height' => 'float',
             'rotation' => 'float',
             'price' => 'decimal:2',
+            'has_power' => 'boolean',
+            'booked_at' => 'datetime',
+            'paid' => 'boolean',
+            'paid_at' => 'datetime',
         ];
     }
 

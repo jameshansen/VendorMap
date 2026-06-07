@@ -16,12 +16,32 @@ class Vendor extends Model
 
     protected $fillable = [
         'user_id',
+        'status',           // pending | approved | rejected
         'business_name',
         'contact_name',
         'email',
         'phone',
+        'address',
+        'website',
+        'socials',
+        'application_note',  // applicant-supplied note for verification
+        'admin_notes',       // internal, admin-only
+        'approved_at',
         'notes',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'socials' => 'array',
+            'approved_at' => 'datetime',
+        ];
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
 
     public function user(): BelongsTo
     {

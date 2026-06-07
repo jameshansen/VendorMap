@@ -48,7 +48,7 @@
         </div>
 
         <div class="right">
-            <a class="back" href="{{ route('events.index') }}">All events</a>
+            <a class="back" href="{{ route('admin.events.index') }}">All events</a>
             <span id="status" class="status">Loading…</span>
             <button id="save" class="save">Save Event and Layout</button>
         </div>
@@ -106,6 +106,7 @@
                         <option value="booked">Booked</option>
                     </select>
                 </label>
+                <label class="check"><input id="t_power" type="checkbox"> Has electrical power</label>
                 <button class="danger" data-delete>Delete table</button>
             </div>
 
@@ -157,11 +158,11 @@
     window.__DESIGNER__ = {
         data: @json($data),
         presets: @json($presets),
-        saveUrl: "{{ route('designer.save', $event) }}",
-        presetsUrl: "{{ url('/presets') }}",
-        venuePreviewBase: "{{ url('/events/' . $event->id . '/venue') }}",
-        venueNewUrl: "{{ route('venue.create', $event) }}",
-        venueDuplicateUrl: "{{ route('venue.duplicate', $event) }}",
+        saveUrl: "{{ route('admin.designer.save', $event) }}",
+        presetsUrl: "{{ url('/admin/presets') }}",
+        venuePreviewBase: "{{ url('/admin/events/' . $event->id . '/venue') }}",
+        venueNewUrl: "{{ route('admin.venue.create', $event) }}",
+        venueDuplicateUrl: "{{ route('admin.venue.duplicate', $event) }}",
         csrf: "{{ csrf_token() }}",
     };
 </script>

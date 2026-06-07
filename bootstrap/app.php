@@ -12,7 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'approved.vendor' => \App\Http\Middleware\EnsureApprovedVendor::class,
+        ]);
+
+        // Demo mode routes each visitor to their own pool database. Self-disables
+        // when demo.enabled is false, so it's harmless in normal operation.
+        $middleware->web(append: [
+            \App\Http\Middleware\DemoDatabase::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

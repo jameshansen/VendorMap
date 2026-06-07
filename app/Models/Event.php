@@ -41,6 +41,22 @@ class Event extends Model
         ];
     }
 
+    /** Whether the registration window is currently open for booking. */
+    public function registrationOpen(): bool
+    {
+        $now = now();
+
+        if ($this->registration_opens_at && $now->lt($this->registration_opens_at)) {
+            return false;
+        }
+
+        if ($this->registration_closes_at && $now->gt($this->registration_closes_at)) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function venue(): BelongsTo
     {
         return $this->belongsTo(Venue::class);

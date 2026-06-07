@@ -77,6 +77,7 @@ class DemoSeeder extends Seeder
                 $col = 0;
                 foreach ([400, 700, 1000] as $x) {
                     $event->tables()->create([
+                        'venue_id' => $venue->id,
                         'label' => chr(65 + $row) . ($col + 1),
                         'x' => $x,
                         'y' => $y,
@@ -85,6 +86,7 @@ class DemoSeeder extends Seeder
                         'rotation' => 0,
                         'price' => 45.00,
                         'status' => 'available',
+                        'has_power' => $col === 0, // first column has power drops
                     ]);
                     $col++;
                 }
@@ -100,6 +102,26 @@ class DemoSeeder extends Seeder
         \App\Models\Preset::firstOrCreate(
             ['kind' => 'power', 'name' => 'Heavy 50A'],
             ['data' => ['amperage' => 50, 'voltage' => 240, 'outlets' => 1]]
+        );
+
+        // A ready-to-use, already-approved vendor so the demo can book straight away.
+        $vendorUser = User::firstOrCreate(
+            ['email' => 'vendor@demo.test'],
+            ['name' => 'Demo Vendor', 'password' => Hash::make('demo1234'), 'role' => 'vendor']
+        );
+        $vendorUser->vendor()->firstOrCreate(
+            ['user_id' => $vendorUser->id],
+            [
+                'status' => 'approved',
+                'approved_at' => now(),
+                'business_name' => 'Demo Crafts Co.',
+                'contact_name' => 'Demo Vendor',
+                'email' => 'vendor@demo.test',
+                'phone' => '555-0100',
+                'address' => '1 Market Street',
+                'website' => 'https://example.com',
+                'socials' => ['instagram' => '@democrafts'],
+            ]
         );
     }
 }

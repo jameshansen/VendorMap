@@ -63,6 +63,16 @@ class VenueController extends Controller
             $venue->powerOutlets()->create($outlet->only(['label', 'x', 'y', 'amperage', 'voltage', 'outlets']));
         }
 
+        // Copy the source venue's table layout for this event into the new venue
+        // so the duplicate starts as a true copy of the layout, not a blank slate.
+        $sourceTables = $event->tables()->where('venue_id', $old->id)->get();
+        foreach ($sourceTables as $table) {
+            $event->tables()->create(
+                $table->only(['label', 'x', 'y', 'width', 'height', 'rotation', 'shape', 'price', 'status'])
+                + ['venue_id' => $venue->id]
+            );
+        }
+
         return response()->json($this->state($event, $venue));
     }
 

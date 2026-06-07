@@ -24,8 +24,8 @@ class DesignerController extends Controller
 
     /**
      * Save the whole layout in one request: the venue's fixed features
-     * (boundary, doors, power) and the event's tables. Returns the fresh
-     * payload so the canvas can re-render with real database ids.
+     * (boundary, doors, power) and the event's tables for this venue.
+     * Returns the fresh payload so the canvas can re-render with real database ids.
      */
     public function save(Request $request, Event $event): JsonResponse
     {
@@ -66,6 +66,7 @@ class DesignerController extends Controller
             'tables.*.shape' => 'nullable|in:rect,round',
             'tables.*.price' => 'nullable|numeric',
             'tables.*.status' => 'nullable|in:available,held,booked',
+            'tables.*.has_power' => 'boolean',
         ]);
 
         // The venue is only committed to the event here, on save.
@@ -87,9 +88,18 @@ class DesignerController extends Controller
         $this->sync($venue->powerOutlets(), $validated['venue']['power_outlets'] ?? [], [
             'label', 'x', 'y', 'amperage', 'voltage', 'outlets',
         ]);
-        $this->sync($event->tables(), $validated['tables'] ?? [], [
-            'label', 'x', 'y', 'width', 'height', 'rotation', 'shape', 'price', 'status',
-        ]);
+
+        // Tables are scoped to this event + venue so each venue keeps its own layout.
+        // Force venue_id on every row so newly created tables land in the right bucket.
+        $tableRows = array_map(
+            fn ($t) => array_merge($t, ['venue_id' => $venue->id]),
+            $validated['tables'] ?? []
+        );
+        $this->sync(
+            $event->tables()->where('venue_id', $venue->id),
+            $tableRows,
+            ['venue_id', 'label', 'x', 'y', 'width', 'height', 'rotation', 'shape', 'price', 'status', 'has_power']
+        );
 
         if (! empty($validated['event'])) {
             $event->fill($validated['event'])->save();
@@ -129,13 +139,13 @@ class DesignerController extends Controller
     }
 
     /**
-     * Build the designer payload showing a specific venue's shell with this
-     * event's tables. Used for previewing a venue before it's committed.
+     * Build the designer payload for a specific event+venue combination.
+     * Tables are filtered to only those placed in this venue, so switching
+     * venues shows each venue's own independent table layout.
      */
     public static function payloadFor(Event $event, Venue $venue): array
     {
         $venue->load(['doors', 'powerOutlets']);
-        $event->load('tables');
 
         return [
             'event' => [
@@ -156,7 +166,7 @@ class DesignerController extends Controller
                 'doors' => $venue->doors,
                 'power_outlets' => $venue->powerOutlets,
             ],
-            'tables' => $event->tables,
+            'tables' => $event->tables()->where('venue_id', $venue->id)->get(),
         ];
     }
 }
