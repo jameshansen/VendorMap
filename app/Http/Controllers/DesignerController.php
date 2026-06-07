@@ -1,0 +1,162 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Event;
+use App\Models\Preset;
+use App\Models\Venue;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+use MatanYadaev\EloquentSpatial\Objects\Polygon;
+
+class DesignerController extends Controller
+{
+    public function show(Event $event): View
+    {
+        return view('designer', [
+            'event' => $event,
+            'data' => self::payload($event),
+            'presets' => Preset::orderBy('name')->get(),
+            'venues' => Venue::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    /**
+     * Save the whole layout in one request: the venue's fixed features
+     * (boundary, doors, power) and the event's tables. Returns the fresh
+     * payload so the canvas can re-render with real database ids.
+     */
+    public function save(Request $request, Event $event): JsonResponse
+    {
+        $validated = $request->validate([
+            'venue_id' => 'nullable|exists:venues,id',
+            'event.name' => 'sometimes|string|max:255',
+            'event.starts_at' => 'nullable|date',
+            'event.ends_at' => 'nullable|date',
+            'event.is_public' => 'boolean',
+            'event.registration_opens_at' => 'nullable|date',
+            'event.registration_closes_at' => 'nullable|date',
+            'event.cancellation_deadline' => 'nullable|date',
+            'venue.area' => 'nullable|array',
+            'venue.doors' => 'array',
+            'venue.doors.*.id' => 'nullable|integer',
+            'venue.doors.*.label' => 'nullable|string',
+            'venue.doors.*.type' => 'nullable|string',
+            'venue.doors.*.x' => 'required|numeric',
+            'venue.doors.*.y' => 'required|numeric',
+            'venue.doors.*.width' => 'nullable|numeric',
+            'venue.doors.*.rotation' => 'nullable|numeric',
+            'venue.power_outlets' => 'array',
+            'venue.power_outlets.*.id' => 'nullable|integer',
+            'venue.power_outlets.*.label' => 'nullable|string',
+            'venue.power_outlets.*.x' => 'required|numeric',
+            'venue.power_outlets.*.y' => 'required|numeric',
+            'venue.power_outlets.*.amperage' => 'nullable|integer',
+            'venue.power_outlets.*.voltage' => 'nullable|integer',
+            'venue.power_outlets.*.outlets' => 'nullable|integer',
+            'tables' => 'array',
+            'tables.*.id' => 'nullable|integer',
+            'tables.*.label' => 'nullable|string',
+            'tables.*.x' => 'required|numeric',
+            'tables.*.y' => 'required|numeric',
+            'tables.*.width' => 'nullable|numeric',
+            'tables.*.height' => 'nullable|numeric',
+            'tables.*.rotation' => 'nullable|numeric',
+            'tables.*.shape' => 'nullable|in:rect,round',
+            'tables.*.price' => 'nullable|numeric',
+            'tables.*.status' => 'nullable|in:available,held,booked',
+        ]);
+
+        // The venue is only committed to the event here, on save.
+        if (! empty($validated['venue_id'])) {
+            $event->update(['venue_id' => $validated['venue_id']]);
+            $event->load('venue');
+        }
+
+        $venue = $event->venue;
+
+        $venue->area = ! empty($validated['venue']['area'])
+            ? Polygon::fromArray($validated['venue']['area'], 0)
+            : null;
+        $venue->save();
+
+        $this->sync($venue->doors(), $validated['venue']['doors'] ?? [], [
+            'label', 'type', 'x', 'y', 'width', 'rotation',
+        ]);
+        $this->sync($venue->powerOutlets(), $validated['venue']['power_outlets'] ?? [], [
+            'label', 'x', 'y', 'amperage', 'voltage', 'outlets',
+        ]);
+        $this->sync($event->tables(), $validated['tables'] ?? [], [
+            'label', 'x', 'y', 'width', 'height', 'rotation', 'shape', 'price', 'status',
+        ]);
+
+        if (! empty($validated['event'])) {
+            $event->fill($validated['event'])->save();
+        }
+
+        return response()->json(self::payload($event->fresh()));
+    }
+
+    /**
+     * Generic "replace this whole set" helper: update rows that arrived with an
+     * id, create rows that didn't, and delete anything no longer present.
+     */
+    private function sync($relation, array $rows, array $fields): void
+    {
+        $keep = [];
+
+        foreach ($rows as $row) {
+            $attributes = [];
+            foreach ($fields as $field) {
+                if (array_key_exists($field, $row)) {
+                    $attributes[$field] = $row[$field];
+                }
+            }
+
+            $record = $relation->updateOrCreate(['id' => $row['id'] ?? null], $attributes);
+            $keep[] = $record->id;
+        }
+
+        $relation->whereNotIn('id', $keep ?: [0])->delete();
+    }
+
+    public static function payload(Event $event): array
+    {
+        $event->loadMissing('venue');
+
+        return self::payloadFor($event, $event->venue);
+    }
+
+    /**
+     * Build the designer payload showing a specific venue's shell with this
+     * event's tables. Used for previewing a venue before it's committed.
+     */
+    public static function payloadFor(Event $event, Venue $venue): array
+    {
+        $venue->load(['doors', 'powerOutlets']);
+        $event->load('tables');
+
+        return [
+            'event' => [
+                'id' => $event->id,
+                'name' => $event->name,
+                'venue_id' => $venue->id, // the venue currently shown, not necessarily saved
+                'is_public' => (bool) $event->is_public,
+                'starts_at' => $event->starts_at?->format('Y-m-d\TH:i'),
+                'ends_at' => $event->ends_at?->format('Y-m-d\TH:i'),
+                'registration_opens_at' => $event->registration_opens_at?->format('Y-m-d\TH:i'),
+                'registration_closes_at' => $event->registration_closes_at?->format('Y-m-d\TH:i'),
+                'cancellation_deadline' => $event->cancellation_deadline?->format('Y-m-d\TH:i'),
+            ],
+            'venue' => [
+                'id' => $venue->id,
+                'name' => $venue->name,
+                'area' => $venue->area, // serializes to GeoJSON automatically
+                'doors' => $venue->doors,
+                'power_outlets' => $venue->powerOutlets,
+            ],
+            'tables' => $event->tables,
+        ];
+    }
+}

@@ -1,0 +1,211 @@
+<div class="designer">
+  <!-- Toolbar -->
+  <header class="toolbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <strong>Floor Designer</strong>
+      <span class="venue">{{ venueName() }}</span>
+    </div>
+
+    <div class="tools">
+      <button [class.active]="tool() === 'select'" (click)="tool.set('select')" title="Select / move / pan">Select</button>
+      <button [class.active]="tool() === 'boundary'" (click)="tool.set('boundary')" title="Click to add wall corners">Boundary</button>
+      <button [class.active]="tool() === 'door'" (click)="tool.set('door')">Door</button>
+      <button [class.active]="tool() === 'power'" (click)="tool.set('power')">Power</button>
+      <button [class.active]="tool() === 'table'" (click)="tool.set('table')">Table</button>
+    </div>
+
+    <div class="right">
+      <div class="zoom">
+        <button (click)="zoom(1.2)">−</button>
+        <button (click)="zoom(1 / 1.2)">+</button>
+      </div>
+      <span class="status">{{ status() }}</span>
+      <button class="save" (click)="save()">Save layout</button>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- Canvas -->
+    <svg
+      #svg
+      class="canvas"
+      [attr.viewBox]="viewBox()"
+      [class.placing]="tool() !== 'select'"
+      (pointermove)="onMove($event)"
+      (pointerup)="onUp($event)"
+      (wheel)="onWheel($event)"
+    >
+      <defs>
+        <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+          <path d="M 100 0 L 0 0 0 100" fill="none" stroke="var(--line)" stroke-width="1" />
+        </pattern>
+        <pattern id="gridMajor" width="500" height="500" patternUnits="userSpaceOnUse">
+          <rect width="500" height="500" fill="url(#grid)" />
+          <path d="M 500 0 L 0 0 0 500" fill="none" stroke="var(--line-major)" stroke-width="2" />
+        </pattern>
+      </defs>
+
+      <!-- background catches canvas clicks (placing / panning) -->
+      <rect x="-20000" y="-20000" width="40000" height="40000" fill="url(#gridMajor)" (pointerdown)="onCanvasDown($event)" />
+
+      <!-- venue boundary -->
+      @if (boundary().length >= 3) {
+        <polygon class="boundary" [attr.points]="boundaryPoints()" />
+      } @else if (boundary().length > 0) {
+        <polyline class="boundary draft" [attr.points]="boundaryPoints()" />
+      }
+
+      <!-- boundary handles -->
+      @if (tool() === 'select' || tool() === 'boundary') {
+        @for (v of boundary(); track $index) {
+          <circle
+            class="vertex"
+            [class.selected]="isSelected('vertex', $index)"
+            [attr.cx]="v.x" [attr.cy]="v.y" r="14"
+            (pointerdown)="onElementDown($event, 'vertex', $index)"
+          />
+        }
+      }
+
+      <!-- power outlets -->
+      @for (p of power(); track p.id ?? $index) {
+        <g class="power" [class.selected]="isSelected('power', $index)"
+           [attr.transform]="'translate(' + p.x + ' ' + p.y + ')'"
+           (pointerdown)="onElementDown($event, 'power', $index)">
+          <circle r="26" />
+          <text class="glyph" text-anchor="middle" dy="12">⚡</text>
+        </g>
+      }
+
+      <!-- doors -->
+      @for (d of doors(); track d.id ?? $index) {
+        <g class="door" [class.selected]="isSelected('door', $index)"
+           [attr.transform]="'translate(' + d.x + ' ' + d.y + ') rotate(' + d.rotation + ')'"
+           (pointerdown)="onElementDown($event, 'door', $index)">
+          <rect [attr.x]="-d.width / 2" y="-9" [attr.width]="d.width" height="18" rx="4" />
+        </g>
+      }
+
+      <!-- tables -->
+      @for (t of tables(); track t.id ?? $index) {
+        <g [class]="'table status-' + t.status" [class.selected]="isSelected('table', $index)"
+           [attr.transform]="'translate(' + t.x + ' ' + t.y + ') rotate(' + t.rotation + ')'"
+           (pointerdown)="onElementDown($event, 'table', $index)">
+          @if (t.shape === 'round') {
+            <ellipse [attr.rx]="t.width / 2" [attr.ry]="t.height / 2" />
+          } @else {
+            <rect [attr.x]="-t.width / 2" [attr.y]="-t.height / 2" [attr.width]="t.width" [attr.height]="t.height" rx="6" />
+          }
+          <text class="label" text-anchor="middle" dy="-4">{{ t.label }}</text>
+          <text class="price" text-anchor="middle" dy="26">{{ money(t.price) }}</text>
+        </g>
+      }
+    </svg>
+
+    <!-- Properties panel -->
+    <aside class="panel">
+      @if (tool() !== 'select') {
+        <p class="hint">
+          @switch (tool()) {
+            @case ('boundary') { Click on the canvas to drop wall corners. Switch to <b>Select</b> to drag them. }
+            @case ('door') { Click to place a door. }
+            @case ('power') { Click to place a power outlet. }
+            @case ('table') { Click to drop a table. }
+          }
+        </p>
+      }
+
+      @if (selected(); as sel) {
+        <!-- TABLE -->
+        @if (selectedTable(); as t) {
+          <h3>Table</h3>
+          <label>Label
+            <input [value]="t.label ?? ''" (input)="patchTable(sel.index, { label: str($event) })" />
+          </label>
+          <label>Price
+            <input type="number" step="0.01" [value]="t.price" (input)="patchTable(sel.index, { price: num($event) })" />
+          </label>
+          <div class="row">
+            <label>Width (cm)
+              <input type="number" [value]="t.width" (input)="patchTable(sel.index, { width: num($event) })" />
+            </label>
+            <label>Height (cm)
+              <input type="number" [value]="t.height" (input)="patchTable(sel.index, { height: num($event) })" />
+            </label>
+          </div>
+          <label>Rotation°
+            <input type="number" [value]="t.rotation" (input)="patchTable(sel.index, { rotation: num($event) })" />
+          </label>
+          <label>Shape
+            <select [value]="t.shape" (change)="patchTable(sel.index, { shape: str($event) === 'round' ? 'round' : 'rect' })">
+              <option value="rect">Rectangle</option>
+              <option value="round">Round</option>
+            </select>
+          </label>
+          <label>Status
+            <select [value]="t.status" (change)="patchTable(sel.index, { status: anyStatus(str($event)) })">
+              <option value="available">Available</option>
+              <option value="held">Held</option>
+              <option value="booked">Booked</option>
+            </select>
+          </label>
+          <button class="danger" (click)="deleteSelected()">Delete table</button>
+        }
+
+        <!-- DOOR -->
+        @if (selectedDoor(); as d) {
+          <h3>Door</h3>
+          <label>Label
+            <input [value]="d.label ?? ''" (input)="patchDoor(sel.index, { label: str($event) })" />
+          </label>
+          <label>Type
+            <select [value]="d.type" (change)="patchDoor(sel.index, { type: anyDoorType(str($event)) })">
+              <option value="entrance">Entrance</option>
+              <option value="exit">Exit</option>
+              <option value="emergency">Emergency</option>
+              <option value="loading">Loading</option>
+            </select>
+          </label>
+          <div class="row">
+            <label>Width (cm)
+              <input type="number" [value]="d.width" (input)="patchDoor(sel.index, { width: num($event) })" />
+            </label>
+            <label>Rotation°
+              <input type="number" [value]="d.rotation" (input)="patchDoor(sel.index, { rotation: num($event) })" />
+            </label>
+          </div>
+          <button class="danger" (click)="deleteSelected()">Delete door</button>
+        }
+
+        <!-- POWER -->
+        @if (selectedPower(); as p) {
+          <h3>Power outlet</h3>
+          <label>Label
+            <input [value]="p.label ?? ''" (input)="patchPower(sel.index, { label: str($event) })" />
+          </label>
+          <div class="row">
+            <label>Amps
+              <input type="number" [value]="p.amperage ?? 0" (input)="patchPower(sel.index, { amperage: num($event) })" />
+            </label>
+            <label>Volts
+              <input type="number" [value]="p.voltage ?? 0" (input)="patchPower(sel.index, { voltage: num($event) })" />
+            </label>
+          </div>
+          <label>Outlets
+            <input type="number" [value]="p.outlets" (input)="patchPower(sel.index, { outlets: num($event) })" />
+          </label>
+          <button class="danger" (click)="deleteSelected()">Delete outlet</button>
+        }
+
+        @if (sel.kind === 'vertex') {
+          <h3>Wall corner</h3>
+          <p class="hint">Drag to reshape the room.</p>
+          <button class="danger" (click)="deleteSelected()">Delete corner</button>
+        }
+      } @else if (tool() === 'select') {
+        <p class="hint">Select something on the canvas to edit it, or pick a tool above to add features. Scroll to zoom, drag empty space to pan.</p>
+      }
+    </aside>
+  </div>
+</div>

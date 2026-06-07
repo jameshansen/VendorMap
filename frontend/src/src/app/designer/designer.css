@@ -1,0 +1,110 @@
+:host {
+  --bg: #0d1117;
+  --bg-canvas: #0a1622;
+  --surface: #161d27;
+  --surface-2: #1d2632;
+  --border: #2a3645;
+  --text: #e6edf3;
+  --muted: #8b97a6;
+  --line: rgba(86, 156, 214, 0.10);
+  --line-major: rgba(86, 156, 214, 0.22);
+  --accent: #f2a64d;
+  --blueprint: #6cc0ff;
+  --ok: #41b883;
+  --held: #e0a83b;
+  --booked: #d65a5a;
+
+  display: block;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Hanken Grotesk', 'Segoe UI', system-ui, sans-serif;
+}
+
+.designer { display: flex; flex-direction: column; height: 100%; }
+
+/* ---- toolbar ---- */
+.toolbar {
+  display: flex; align-items: center; gap: 1.5rem;
+  padding: 0 1rem; height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: .6rem; font-size: .95rem; }
+.brand .dot { width: 10px; height: 10px; border-radius: 2px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+.brand .venue { color: var(--muted); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .8rem; }
+
+.tools { display: flex; gap: .25rem; }
+.tools button, .zoom button {
+  background: transparent; color: var(--muted);
+  border: 1px solid transparent; border-radius: 7px;
+  padding: .4rem .8rem; font: inherit; font-size: .85rem; cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.tools button:hover, .zoom button:hover { color: var(--text); background: var(--surface-2); }
+.tools button.active { color: var(--bg); background: var(--accent); font-weight: 600; }
+
+.right { margin-left: auto; display: flex; align-items: center; gap: 1rem; }
+.zoom { display: flex; gap: .15rem; }
+.zoom button { width: 34px; text-align: center; border-color: var(--border); }
+.status { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .78rem; color: var(--muted); min-width: 70px; }
+.save {
+  background: var(--blueprint); color: #04121f; border: none; border-radius: 7px;
+  padding: .5rem 1rem; font: inherit; font-weight: 600; cursor: pointer;
+}
+.save:hover { filter: brightness(1.08); }
+
+/* ---- body ---- */
+.body { flex: 1; display: flex; min-height: 0; }
+
+.canvas { flex: 1; background: var(--bg-canvas); touch-action: none; cursor: grab; }
+.canvas.placing { cursor: crosshair; }
+
+/* ---- svg elements ---- */
+.boundary { fill: rgba(108, 192, 255, 0.05); stroke: var(--blueprint); stroke-width: 6; }
+.boundary.draft { fill: none; stroke-dasharray: 18 14; }
+
+.vertex { fill: var(--bg); stroke: var(--blueprint); stroke-width: 4; cursor: move; }
+.vertex.selected { fill: var(--accent); stroke: var(--accent); }
+
+.door rect { fill: var(--accent); stroke: #1a120a; stroke-width: 2; cursor: move; }
+.door.selected rect { stroke: #fff; stroke-width: 4; }
+
+.power circle { fill: #20303f; stroke: var(--blueprint); stroke-width: 4; cursor: move; }
+.power .glyph { fill: var(--blueprint); font-size: 32px; }
+.power.selected circle { stroke: var(--accent); }
+
+.table { cursor: move; }
+.table rect, .table ellipse { stroke-width: 4; }
+.table .label { fill: var(--text); font-size: 30px; font-weight: 600; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.table .price { fill: rgba(230, 237, 243, 0.7); font-size: 22px; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.status-available rect, .status-available ellipse { fill: rgba(65, 184, 131, 0.18); stroke: var(--ok); }
+.status-held rect, .status-held ellipse { fill: rgba(224, 168, 59, 0.18); stroke: var(--held); }
+.status-booked rect, .status-booked ellipse { fill: rgba(214, 90, 90, 0.18); stroke: var(--booked); }
+.table.selected rect, .table.selected ellipse { stroke: #fff; stroke-width: 6; }
+
+/* ---- panel ---- */
+.panel {
+  width: 280px; flex-shrink: 0;
+  background: var(--surface); border-left: 1px solid var(--border);
+  padding: 1.1rem; overflow-y: auto;
+}
+.panel h3 { margin: 0 0 1rem; font-size: 1rem; letter-spacing: .02em; }
+.panel .hint { color: var(--muted); font-size: .85rem; line-height: 1.5; }
+.panel label { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .8rem; }
+.panel input, .panel select {
+  display: block; width: 100%; margin-top: .3rem;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: .45rem .55rem; font: inherit; font-size: .9rem;
+}
+.panel input:focus, .panel select:focus { outline: none; border-color: var(--blueprint); }
+.panel .row { display: flex; gap: .6rem; }
+.panel .row label { flex: 1; }
+.danger {
+  width: 100%; margin-top: .6rem;
+  background: transparent; color: var(--booked);
+  border: 1px solid var(--booked); border-radius: 6px;
+  padding: .5rem; font: inherit; cursor: pointer;
+}
+.danger:hover { background: var(--booked); color: #fff; }
