@@ -1,4 +1,5 @@
 # VendorMap
+<img width="400" height="400" alt="vendormap_icon" src="https://github.com/user-attachments/assets/cc021be5-f356-4b5c-a443-4a6a11c4b25a" />
 
 Let vendors book tables at public markets and conventions online, while hosts design the floor plan (boundary, doors, power, tables and prices) and manage events and vendor approvals from an admin panel.
 
