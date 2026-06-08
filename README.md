@@ -19,8 +19,8 @@ The demo is a sandbox: every visitor gets their own isolated copy of the data, s
 
 | Role | How to sign in |
 | --- | --- |
-| **Vendor** | `vendor@demo.test` / `demo1234` (already approved: can book immediately) |
-| **Admin** | Go to `/admin`. Credentials are set in `config.php` (default `admin` / `change-me`). |
+| **Vendor** | `vendor@demo.test` / `demo1234`  |
+| **Admin** | Go to `[/admin](https://vendormap.jameshansen.org/admin/)`. Credentials are `admin` / `demo1234`. |
 
 ## Features
 
