@@ -104,7 +104,9 @@ Project-specific notes:
 
 ## Other Issues
 <img width="381" height="234" alt="image" src="https://github.com/user-attachments/assets/3fd31422-9545-4128-8afd-1fcc4aa38c91" />
-If the message asking to access apps on your local computer shows up after you deploy, remove the public/hot folder - this causes Vite to attempt a local connection:
+
+If a message asking to access apps on your local computer shows up after you deploy, remove the public/hot folder - this causes Vite to attempt a local connection:
+
 ```bash
 rm -f public/hot
 ```
