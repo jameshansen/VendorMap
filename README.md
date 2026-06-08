@@ -1,5 +1,5 @@
 # VendorMap
-<img width="400" height="400" alt="vendormap_icon" src="https://github.com/user-attachments/assets/422ea416-8348-4b56-8d64-5037c69b232a" />
+<img width="400" height="400" alt="vendormap_icon" src="https://github.com/user-attachments/assets/1d3b5bfa-abc1-4737-a0a4-b209e7f96689" />
 
 Let vendors book tables at public markets and conventions online, while hosts design the floor plan (boundary, doors, power, tables and prices) and manage events and vendor approvals from an admin panel.
 
@@ -7,7 +7,7 @@ Let vendors book tables at public markets and conventions online, while hosts de
 
 This project was written to support the Parents Advisory Committee at my son's school. Every year they host a Christmas Market in the gym, and my wife was managing all the bookings manually, which was turning out to be too difficult. We discussed creating a website where vendors at the market can book. Searching on GitHub, I couldn't find any other projects that offered this, most "table booking" apps are for restaurant reservations, not markets, conventions and so on. So this project was started to meet that need.
 
-Since this would be hosted on my Ubuntu Linux Webserver, I chose to use PHP as the language behind this project. Instead of unstructured PHP, this project uses the [Laravel framework](https://laravel.com/). The Framework offers a number of benefits, namely an MVC (Model-View-Controller) code structure which avoid the trap of scattered disorganized PHP files with a mixture of logic and UI. Laravel also has a lot of third party support with additional libraries that integrate with the framework for easily supporting the features expected.
+Since this would be hosted on my Ubuntu Linux Webserver, I chose to use PHP as the language behind this project. Instead of unstructured PHP, this project uses the [Laravel framework](https://laravel.com/). The Framework offers a number of benefits, namely an MVC (Model-View-Controller) code structure which avoid the trap of scattered disorganized PHP files with a mixture of logic and UI. Laravel also has a lot of third party support with additional libraries that integrate with the framework for easily supporting the features expected
 
 This project is still in development, with work ongoing to refine and improve it.
 
