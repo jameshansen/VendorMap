@@ -101,3 +101,10 @@ Project-specific notes:
 - Build assets with `npm run build` (Node only needed at build time).
 - First deploy: set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, then `php artisan key:generate` and `php artisan migrate --force`.
 - Copy and edit `config.php`. For the public demo, run `php artisan demo:setup` and set `demo.enabled = true`.
+
+## Other Issues
+<img width="381" height="234" alt="image" src="https://github.com/user-attachments/assets/3fd31422-9545-4128-8afd-1fcc4aa38c91" />
+If the message asking to access apps on your local computer shows up after you deploy, remove the public/hot folder - this causes Vite to attempt a local connection:
+```bash
+rm -f public/hot
+```
