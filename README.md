@@ -20,7 +20,7 @@ The demo is a sandbox: every visitor gets their own isolated copy of the data, s
 | Role | How to sign in |
 | --- | --- |
 | **Vendor** | `vendor@demo.test` / `demo1234`  |
-| **Admin** | Go to `[/admin](https://vendormap.jameshansen.org/admin/)`. Credentials are `admin` / `demo1234`. |
+| **Admin** | Go to [/admin](https://vendormap.jameshansen.org/admin/). Credentials are `admin` / `demo1234`. |
 
 ## Features
 
