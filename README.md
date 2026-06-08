@@ -1,11 +1,15 @@
 # VendorMap
-<img width="400" height="400" alt="vendormap_icon" src="https://github.com/user-attachments/assets/cc021be5-f356-4b5c-a443-4a6a11c4b25a" />
+<img width="400" height="400" alt="vendormap_icon" src="https://github.com/user-attachments/assets/422ea416-8348-4b56-8d64-5037c69b232a" />
 
 Let vendors book tables at public markets and conventions online, while hosts design the floor plan (boundary, doors, power, tables and prices) and manage events and vendor approvals from an admin panel.
 
 ## Background
 
 This project was written to support the Parents Advisory Committee at my son's school. Every year they host a Christmas Market in the gym, and my wife was managing all the bookings manually, which was turning out to be too difficult. We discussed creating a website where vendors at the market can book. Searching on GitHub, I couldn't find any other projects that offered this, most "table booking" apps are for restaurant reservations, not markets, conventions and so on. So this project was started to meet that need.
+
+Since this would be hosted on my Ubuntu Linux Webserver, I chose to use PHP as the language behind this project. Based on current trends on github, most popular PHP apps use the [Laravel framework](https://laravel.com/) due to it's MVC style approach making it a good choice for keeping code organized. Laravel also has a lot of third party support with additional libraries that integrate with the framework for easily supporting the features expected.
+
+This project is still in development, with work ongoing to refine and improve it.
 
 ## Live demo
 
