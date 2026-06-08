@@ -34,9 +34,11 @@ The demo is a sandbox: every visitor gets their own isolated copy of the data, s
 
 ## Tech stack
 
-PHP 8.3 · Laravel 13 · Blade · Vite · Konva · MySQL 8+ / MariaDB 10.5+.
+PHP 8.4 · Laravel 13 · Blade · Vite · Konva · MySQL 8+ / MariaDB 10.5+.
 
 > MySQL/MariaDB is required: the floor-plan `geometry` columns use spatial types, so SQLite won't work.
+
+> Requires PHP **8.4** (`composer.json` requires `^8.4`). The Symfony 8.1 components pinned in `composer.lock` need PHP 8.4.1+, so `composer install` fails on 8.3 or earlier.
 
 ## Setup
 
@@ -79,6 +81,12 @@ For a public sandbox where visitors can change anything without risking a shared
 php artisan demo:setup
 ```
 
+The `demo:setup` command creates databases named `<db_prefix>1` .. `<db_prefix>N`, so the configured MySQL user needs permission to create them. A single grant covers it (note the escaped underscores so the wildcard matches the slot names):
+
+```sql
+GRANT ALL PRIVILEGES ON `vendormap\_demo\_%`.* TO 'vendormap'@'localhost';
+```
+
 Then set in `config.php`:
 
 ```php
@@ -101,12 +109,54 @@ Project-specific notes:
 - Build assets with `npm run build` (Node only needed at build time).
 - First deploy: set `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, then `php artisan key:generate` and `php artisan migrate --force`.
 - Copy and edit `config.php`. For the public demo, run `php artisan demo:setup` and set `demo.enabled = true`.
+- **PHP on older Ubuntu**: 22.04 (Jammy) ships PHP 8.1. Add `ppa:ondrej/php`, then install `php8.4` and the `php8.4-*` extensions to meet the 8.4 requirement.
+- **Run `composer` and `artisan` as the web user**, not as root. Root-owned files in `storage/` and `bootstrap/cache/` are the usual cause of a 500 right after deploy, because the web server can't write to them. Use `sudo -u www-data php8.4 artisan ...`, and if you've already run things as root, reset ownership:
+
+  ```bash
+  sudo chown -R www-data:www-data .
+  sudo chmod -R 775 storage bootstrap/cache
+  ```
+
+### Apache instead of Nginx
+
+The app runs fine under Apache. To serve it with PHP-FPM (which also lets you keep other vhosts on a different PHP version), enable the proxy module and hand `.php` to the FPM socket inside the vhost:
+
+```bash
+sudo a2enmod proxy_fcgi
+```
+
+```apache
+<VirtualHost *:80>
+    ServerName vendormap.example.org
+    DocumentRoot /var/www/vendormap/public
+
+    <Directory /var/www/vendormap/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    <FilesMatch \.php$>
+        SetHandler "proxy:unix:/run/php/php8.4-fpm.sock|fcgi://localhost"
+    </FilesMatch>
+</VirtualHost>
+```
+
+Then add HTTPS with `sudo certbot --apache -d vendormap.example.org`.
 
 ## Other Issues
+
 <img width="381" height="234" alt="image" src="https://github.com/user-attachments/assets/3fd31422-9545-4128-8afd-1fcc4aa38c91" />
 
 If a message asking to access apps on your local computer shows up after you deploy, remove the public/hot folder - this causes Vite to attempt a local connection:
 
 ```bash
 rm -f public/hot
+```
+
+**Build dependencies on the server, don't copy them from another machine.** Copying `vendor/` or `node_modules` from a local copy causes two failures: a stale autoloader that tries to `require` a missing dev package such as PHPUnit (fatal error on any `artisan` command), and Vite failing with `vite: Permission denied` from lost executable bits or a wrong-platform `esbuild` binary. Rebuild both on the server:
+
+```bash
+rm -rf vendor node_modules
+composer install --no-dev --optimize-autoloader
+npm install && npm run build
 ```
