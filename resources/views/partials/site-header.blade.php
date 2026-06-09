@@ -4,7 +4,7 @@
 @endphp
 <header class="site-header">
     <a class="site-brand" href="{{ route('home') }}">
-        <span class="dot"></span> {{ config('vendormap.name', 'VendorMap') }}
+        <img src="img/icon.png" style="height: 32px" /> {{ config('vendormap.name', 'VendorMap') }}
     </a>
 
     <nav class="site-nav">
