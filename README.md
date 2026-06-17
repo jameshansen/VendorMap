@@ -42,6 +42,12 @@ PHP 8.4 · Laravel 13 · Blade · Vite · Konva · MySQL 8+ / MariaDB 10.5+.
 
 ## Setup
 
+From the shell on your webserver:
+```bash
+cd <your-folder>
+git clone https://github.com/jameshansen/VendorMap ./
+```
+To copy the latest version to the current folder. Then:
 ```bash
 composer install
 cp .env.example .env
@@ -58,7 +64,8 @@ cp config.php.example config.php   # then edit config.php
 php artisan db:seed --class=DemoSeeder
 ```
 
-While developing, run `npm run dev` instead of `npm run build`. Serve the app with `php artisan serve` (or Laravel Herd, which serves it automatically).
+While developing, run `npm run dev` instead of `npm run build`.
+Serve the app with `php artisan serve` (or Laravel Herd, which serves it automatically).
 
 ## Configuration (`config.php`)
 
