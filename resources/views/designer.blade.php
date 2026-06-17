@@ -14,7 +14,7 @@
             Events
         </a>
         <div class="brand">
-            <span class="dot"></span>
+            <span class="bar"></span>
             <select id="venue-select" class="venue-select" title="Venue for this event">
                 @foreach ($venues as $v)
                     <option value="{{ $v->id }}" @selected($v->id === $data['event']['venue_id'])>{{ $v->name }}</option>
@@ -55,6 +55,11 @@
             <button id="unit-toggle" class="ghost" type="button" title="Switch measurement units">cm</button>
             <span id="status" class="status">Loading…</span>
             <button id="save" class="save">Save Event and Layout</button>
+            <button id="tb-burger" class="ghost tb-burger" type="button" title="More" aria-label="More controls">☰</button>
+            <div id="tb-menu" class="tb-menu" hidden>
+                <button type="button" data-proxy="dup-venue">Duplicate venue</button>
+                <button type="button" data-proxy="unit-toggle">Toggle units (cm ⇄ ft/in)</button>
+            </div>
         </div>
     </header>
 

@@ -93,6 +93,7 @@ function init() {
   wireEventFields();
   wireBoundaryPanel();
   wireUnits();
+  wireToolbarMenu();
   initEventForm();
   selectedVenueId = boot.data.event.venue_id;
   log('init: committed venue on event =', selectedVenueId);
@@ -695,6 +696,45 @@ function wireUnits() {
     if (tool === 'boundary') prefillBoundaryPanel();
   });
 }
+// Overflow hamburger: menu items just click the real (CSS-hidden) buttons,
+// so all the tool/control logic stays in one place.
+function wireToolbarMenu() {
+  const burger = document.getElementById('tb-burger');
+  const menu = document.getElementById('tb-menu');
+
+  // Build a menu entry per tool button, then a separator before the static items.
+  const toolBtns = [...document.querySelectorAll('.tools button')];
+  const status = document.createElement('div');
+  status.className = 'tb-status';
+  const sep = document.createElement('div');
+  sep.className = 'tb-sep';
+  menu.prepend(sep);
+  toolBtns.slice().reverse().forEach((tb) => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'tb-tool';
+    item.textContent = tb.textContent.trim();
+    item._tool = tb;
+    item.addEventListener('click', () => { tb.click(); menu.hidden = true; });
+    menu.prepend(item);
+  });
+  menu.appendChild(status);
+
+  burger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.hidden = !menu.hidden;
+    if (!menu.hidden) {
+      menu.querySelectorAll('.tb-tool').forEach((i) => i.classList.toggle('active', i._tool.classList.contains('active')));
+      status.textContent = document.getElementById('status').textContent;
+    }
+  });
+  menu.querySelectorAll('[data-proxy]').forEach((b) =>
+    b.addEventListener('click', () => { document.getElementById(b.dataset.proxy).click(); menu.hidden = true; }));
+  document.addEventListener('click', (e) => {
+    if (!menu.hidden && !menu.contains(e.target) && e.target !== burger) menu.hidden = true;
+  });
+}
+
 function refreshUnitLabels() {
   document.querySelectorAll('.unit-sm').forEach((s) => { s.textContent = smallUnit(); });
   document.querySelectorAll('.unit-bg').forEach((s) => { s.textContent = bigUnit(); });
