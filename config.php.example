@@ -106,6 +106,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Units
+    |--------------------------------------------------------------------------
+    | Default unit system for sizes shown in the designer and booking views.
+    |   'metric'   => centimetres / metres
+    |   'imperial' => inches / feet
+    | Either way each user can toggle the display for their own browser.
+    */
+    'units' => 'metric',
+
+    /*
+    |--------------------------------------------------------------------------
     | Demo mode (public sandbox)
     |--------------------------------------------------------------------------
     | When enabled, the site stops using the main database for visitor data and

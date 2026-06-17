@@ -1,4 +1,5 @@
 import Konva from 'konva';
+import { initUnits, toggleUnit, currentUnit, cmToSmall, smallToCm, smallUnit, cmToBig, bigToCm, bigUnit } from './units.js';
 
 // ---------------------------------------------------------------------------
 // Setup. All coordinates are in centimetres; the stage scale handles zoom.
@@ -90,6 +91,8 @@ function init() {
   wireContextMenu();
   wireVenue();
   wireEventFields();
+  wireBoundaryPanel();
+  wireUnits();
   initEventForm();
   selectedVenueId = boot.data.event.venue_id;
   log('init: committed venue on event =', selectedVenueId);
@@ -289,6 +292,11 @@ function wireStage() {
     if (tool === 'select' || tool === 'details') {
       const owner = ownerOf(e.target);
       if (owner && owner._kind) select(owner); else deselect();
+    } else if (tool === 'table' || tool === 'door' || tool === 'power') {
+      // Clicking an existing object means "select that", not "add another".
+      const owner = ownerOf(e.target);
+      if (owner && owner._kind && owner._kind !== 'vertex') { setTool('select'); select(owner); }
+      else if (e.target === stage || e.target === boundaryLine) handlePlace(relativePointer());
     } else if (e.target === stage || e.target === boundaryLine) {
       handlePlace(relativePointer());
     }
@@ -326,6 +334,8 @@ function addObject(kind, preset, x, y) {
   markDirty();
   return node;
 }
+function nodeForModel(m) { return layer.getChildren().find((n) => n._model === m) || null; }
+
 function handlePlace(pos) {
   const x = Math.round(pos.x), y = Math.round(pos.y);
   if (tool === 'boundary') {
@@ -335,6 +345,12 @@ function handlePlace(pos) {
     markDirty();
     return;
   }
+  // Guard against accidental duplicates: if a same-kind object already sits
+  // right where the user clicked, select it instead of stacking a new one.
+  const arr = tool === 'table' ? tables : tool === 'door' ? doors : power;
+  const near = arr.find((m) => Math.hypot(m.x - x, m.y - y) < 30);
+  if (near) { const n = nodeForModel(near); if (n) { setTool('select'); select(n); return; } }
+
   const preset = activePreset[tool] || presetsFor(tool)[0];
   select(addObject(tool, preset, x, y));
 }
@@ -368,9 +384,10 @@ function setTool(next) {
 function updatePanel() {
   document.getElementById('hint').hidden = true;
   document.getElementById('palette').hidden = true;
-  ['table', 'door', 'power', 'vertex', 'event'].forEach((k) => { document.getElementById('panel-' + k).hidden = true; });
+  ['table', 'door', 'power', 'vertex', 'event', 'boundary'].forEach((k) => { document.getElementById('panel-' + k).hidden = true; });
   if (selected) { document.getElementById('panel-' + selected._kind).hidden = false; populatePanel(); return; }
   if (tool === 'details') { document.getElementById('panel-event').hidden = false; return; }
+  if (tool === 'boundary') { document.getElementById('panel-boundary').hidden = false; prefillBoundaryPanel(); return; }
   if (tool === 'door' || tool === 'power' || tool === 'table') { document.getElementById('palette').hidden = false; renderPalette(tool); return; }
   document.getElementById('hint').hidden = false;
 }
@@ -432,15 +449,15 @@ function wirePanel() {
   const on = (id, ev, fn) => document.getElementById(id).addEventListener(ev, (e) => { fn(e); markDirty(); });
   on('t_label', 'input', () => { selected._model.label = val('t_label'); selected._label.text(val('t_label')); recenter(selected._label, 0, -16); });
   on('t_price', 'input', () => { selected._model.price = Number(val('t_price')); selected._price.text(money(selected._model.price)); recenter(selected._price, 0, 14); });
-  on('t_width', 'input', () => { selected._model.width = Number(val('t_width')); resizeTableShape(selected); });
-  on('t_height', 'input', () => { selected._model.height = Number(val('t_height')); resizeTableShape(selected); });
+  on('t_width', 'input', () => { selected._model.width = smallToCm(val('t_width')); resizeTableShape(selected); });
+  on('t_height', 'input', () => { selected._model.height = smallToCm(val('t_height')); resizeTableShape(selected); });
   on('t_rotation', 'input', () => { selected._model.rotation = Number(val('t_rotation')); selected.rotation(selected._model.rotation); });
   on('t_shape', 'change', () => { selected._model.shape = val('t_shape'); rebuildTableShape(selected); });
   on('t_status', 'change', () => { selected._model.status = val('t_status'); applyStyle(selected._shape, selected._model.status); });
   on('t_power', 'change', () => { selected._model.has_power = document.getElementById('t_power').checked; selected._powerBadge.visible(selected._model.has_power); layer.batchDraw(); });
   on('d_label', 'input', () => { selected._model.label = val('d_label'); });
   on('d_type', 'change', () => { selected._model.type = val('d_type'); });
-  on('d_width', 'input', () => { const w = Number(val('d_width')); selected._model.width = w; selected.width(w); selected.offsetX(w / 2); });
+  on('d_width', 'input', () => { const w = smallToCm(val('d_width')); selected._model.width = w; selected.width(w); selected.offsetX(w / 2); });
   on('d_rotation', 'input', () => { selected._model.rotation = Number(val('d_rotation')); selected.rotation(selected._model.rotation); });
   on('p_label', 'input', () => { selected._model.label = val('p_label'); });
   on('p_amperage', 'input', () => { selected._model.amperage = Number(val('p_amperage')); });
@@ -454,11 +471,11 @@ function populatePanel() {
   if (!selected) return;
   const m = selected._model;
   if (selected._kind === 'table') {
-    setVal('t_label', m.label || ''); setVal('t_price', m.price); setVal('t_width', m.width); setVal('t_height', m.height);
+    setVal('t_label', m.label || ''); setVal('t_price', m.price); setVal('t_width', cmToSmall(m.width)); setVal('t_height', cmToSmall(m.height));
     setVal('t_rotation', Math.round(selected.rotation())); setVal('t_shape', m.shape); setVal('t_status', m.status);
     document.getElementById('t_power').checked = !!m.has_power;
   } else if (selected._kind === 'door') {
-    setVal('d_label', m.label || ''); setVal('d_type', m.type); setVal('d_width', m.width); setVal('d_rotation', Math.round(selected.rotation()));
+    setVal('d_label', m.label || ''); setVal('d_type', m.type); setVal('d_width', cmToSmall(m.width)); setVal('d_rotation', Math.round(selected.rotation()));
   } else if (selected._kind === 'power') {
     setVal('p_label', m.label || ''); setVal('p_amperage', m.amperage ?? 0); setVal('p_voltage', m.voltage ?? 0); setVal('p_outlets', m.outlets ?? 1);
   }
@@ -620,6 +637,68 @@ function applyServerState(resp) {
 }
 function confirmDiscard() {
   return !dirty || confirm('You have unsaved changes that will be lost. Continue?');
+}
+
+// ---------------------------------------------------------------------------
+// Boundary panel: clear / rebuild the room from a width × height
+// ---------------------------------------------------------------------------
+function boundaryBounds() {
+  if (boundaryPts.length < 2) return null;
+  const xs = boundaryPts.map((p) => p.x), ys = boundaryPts.map((p) => p.y);
+  return { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) };
+}
+function prefillBoundaryPanel() {
+  const b = boundaryBounds();
+  const wCm = b ? b.maxX - b.minX : 2000; // default 20m × 14m
+  const hCm = b ? b.maxY - b.minY : 1400;
+  setVal('b_width', cmToBig(wCm));
+  setVal('b_height', cmToBig(hCm));
+}
+function recreateBoundaryRect(wCm, hCm) {
+  if (wCm < 10 || hCm < 10) return;
+  const b = boundaryBounds();
+  const x0 = b ? b.minX : 0, y0 = b ? b.minY : 0;
+  boundaryPts = [
+    { x: x0, y: y0 }, { x: x0 + wCm, y: y0 },
+    { x: x0 + wCm, y: y0 + hCm }, { x: x0, y: y0 + hCm },
+  ];
+  boundaryLine.points(flatten(boundaryPts));
+  rebuildHandles(); resnapDoors(); layer.draw();
+  fitView(); markDirty();
+}
+function clearBoundary() {
+  boundaryPts = [];
+  boundaryLine.points([]);
+  rebuildHandles(); layer.draw();
+  markDirty();
+}
+function wireBoundaryPanel() {
+  document.getElementById('b_recreate').addEventListener('click', () => {
+    recreateBoundaryRect(bigToCm(val('b_width')), bigToCm(val('b_height')));
+  });
+  document.getElementById('b_clear').addEventListener('click', () => {
+    if (boundaryPts.length && !confirm('Clear the room boundary?')) return;
+    clearBoundary();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Units (cm/m <-> in/ft) toggle
+// ---------------------------------------------------------------------------
+function wireUnits() {
+  initUnits(boot.units);
+  refreshUnitLabels();
+  document.getElementById('unit-toggle').addEventListener('click', () => {
+    toggleUnit();
+    refreshUnitLabels();
+    if (selected) populatePanel();
+    if (tool === 'boundary') prefillBoundaryPanel();
+  });
+}
+function refreshUnitLabels() {
+  document.querySelectorAll('.unit-sm').forEach((s) => { s.textContent = smallUnit(); });
+  document.querySelectorAll('.unit-bg').forEach((s) => { s.textContent = bigUnit(); });
+  document.getElementById('unit-toggle').textContent = currentUnit() === 'imperial' ? 'ft/in' : 'cm';
 }
 
 // ---------------------------------------------------------------------------

@@ -24,6 +24,7 @@ class Vendor extends Model
         'address',
         'website',
         'socials',
+        'categories',        // product categories the vendor carries (list of names)
         'application_note',  // applicant-supplied note for verification
         'admin_notes',       // internal, admin-only
         'approved_at',
@@ -34,6 +35,7 @@ class Vendor extends Model
     {
         return [
             'socials' => 'array',
+            'categories' => 'array',
             'approved_at' => 'datetime',
         ];
     }

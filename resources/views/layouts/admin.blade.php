@@ -18,6 +18,8 @@
                 <a href="{{ route('admin.dashboard') }}" @class(['active' => request()->routeIs('admin.dashboard')])>Dashboard</a>
                 <a href="{{ route('admin.events.index') }}" @class(['active' => request()->routeIs('admin.events.*')])>Events</a>
                 <a href="{{ route('admin.vendors.index') }}" @class(['active' => request()->routeIs('admin.vendors.*')])>Vendors</a>
+                <a href="{{ route('admin.categories.index') }}" @class(['active' => request()->routeIs('admin.categories.*')])>Categories</a>
+                <a href="{{ route('admin.conditions.edit') }}" @class(['active' => request()->routeIs('admin.conditions.*')])>Conditions</a>
             </nav>
             <form method="POST" action="{{ route('admin.logout') }}" class="admin-logout">
                 @csrf

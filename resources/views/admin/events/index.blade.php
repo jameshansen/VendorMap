@@ -27,15 +27,17 @@
                         <td>{{ $event->is_public ? 'Yes' : 'No' }}</td>
                         <td>{{ $event->starts_at?->format('M j, Y g:ia') ?? '—' }}</td>
                         <td>{{ $event->tables_count }}</td>
-                        <td class="row-actions">
-                            <a href="{{ route('admin.designer.show', $event) }}">Designer</a>
-                            <a href="{{ route('admin.bookings.index', $event) }}">Bookings</a>
-                            <a href="{{ route('admin.events.edit', $event) }}">Edit</a>
-                            <form method="POST" action="{{ route('admin.events.destroy', $event) }}"
-                                  onsubmit="return confirm('Delete this event and its layout?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="link-danger">Delete</button>
-                            </form>
+                        <td>
+                            <div class="row-actions">
+                                <a href="{{ route('admin.designer.show', $event) }}">Designer</a>
+                                <a href="{{ route('admin.bookings.index', $event) }}">Bookings</a>
+                                <a href="{{ route('admin.events.edit', $event) }}">Edit</a>
+                                <form method="POST" action="{{ route('admin.events.destroy', $event) }}"
+                                      onsubmit="return confirm('Delete this event and its layout?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="link-danger">Delete</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @endforeach

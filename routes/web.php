@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\AdminSessionController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\ConditionsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController as AdminEventController;
 use App\Http\Controllers\Admin\VendorController as AdminVendorController;
@@ -85,6 +87,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('events/{event}/bookings/{table}/confirm', [AdminBookingController::class, 'confirm'])->name('bookings.confirm');
         Route::post('events/{event}/bookings/{table}/paid', [AdminBookingController::class, 'markPaid'])->name('bookings.paid');
         Route::post('events/{event}/bookings/{table}/unpaid', [AdminBookingController::class, 'markUnpaid'])->name('bookings.unpaid');
+
+        // Vendor product categories (suggestion list)
+        Route::get('categories', [AdminCategoryController::class, 'index'])->name('categories.index');
+        Route::post('categories', [AdminCategoryController::class, 'store'])->name('categories.store');
+        Route::delete('categories/{category}', [AdminCategoryController::class, 'destroy'])->name('categories.destroy');
+
+        // Global vendor conditions / liability / rules document
+        Route::get('conditions', [ConditionsController::class, 'edit'])->name('conditions.edit');
+        Route::put('conditions', [ConditionsController::class, 'update'])->name('conditions.update');
 
         // Vendor approvals
         Route::get('vendors', [AdminVendorController::class, 'index'])->name('vendors.index');

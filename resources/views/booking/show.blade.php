@@ -20,6 +20,7 @@
                 {{ $event->venue?->name }}
                 @if ($event->starts_at) · {{ $event->starts_at->format('l, M j Y · g:ia') }} @endif
             </p>
+            <button id="unit-toggle" class="btn-link" type="button" title="Switch measurement units">Show in ft/in</button>
         </div>
 
         {{-- Prompt shown until a table is selected --}}
@@ -61,6 +62,7 @@
         bookUrl: "{{ route('events.book', $event) }}",
         releaseBase: "{{ url('/events/' . $event->id . '/bookings') }}",
         homeUrl: "{{ route('home') }}",
+        profileUrl: "{{ route('profile.update') }}",
         csrf: "{{ csrf_token() }}",
     };
 </script>

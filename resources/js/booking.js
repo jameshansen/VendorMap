@@ -1,8 +1,9 @@
 import Konva from 'konva';
+import { initUnits, toggleUnit, currentUnit, formatSize } from './units.js';
 
 // ---------------------------------------------------------------------------
 // Vendor booking view. Read-only floor plan; click a table to select it, then
-// book it from the details panel. Coordinates are in centimetres.
+// book it through a short wizard. Coordinates are in centimetres.
 // ---------------------------------------------------------------------------
 const boot = window.__BOOKING__;
 const money = (n) => '$' + Number(n || 0).toFixed(2);
@@ -40,11 +41,13 @@ function init() {
   layer = new Konva.Layer();
   stage.add(gridLayer, layer);
 
+  initUnits(boot.state.units);
   drawGrid();
   render();
   fitView();
   wireZoom();
   wireButtons();
+  wireUnits();
 
   // Clicking empty space clears the selection.
   stage.on('click tap', (e) => { if (e.target === stage) selectTable(null); });
@@ -154,7 +157,7 @@ function updatePanel() {
 
   document.getElementById('bd-title').textContent = 'Table ' + (t.label || '');
   document.getElementById('bd-price').textContent = money(t.price);
-  document.getElementById('bd-size').textContent = `${Math.round(t.width)}×${Math.round(t.height)} cm` + (t.shape === 'round' ? ' (round)' : '');
+  document.getElementById('bd-size').textContent = formatSize(t.width, t.height, t.shape === 'round');
   document.getElementById('bd-power').textContent = t.has_power ? 'Yes ⚡' : 'No';
 
   const mine = boot.vendorId && t.vendor_id === boot.vendorId;
@@ -178,23 +181,204 @@ function updatePanel() {
 }
 
 function wireButtons() {
-  document.getElementById('book-btn').addEventListener('click', book);
+  document.getElementById('book-btn').addEventListener('click', startBooking);
   document.getElementById('release-btn').addEventListener('click', release);
 }
 
-// ---- actions --------------------------------------------------------------
-async function book() {
+function wireUnits() {
+  const btn = document.getElementById('unit-toggle');
+  if (!btn) return;
+  const sync = () => { btn.textContent = currentUnit() === 'imperial' ? 'Show in cm' : 'Show in ft/in'; };
+  sync();
+  btn.addEventListener('click', () => { toggleUnit(); sync(); updatePanel(); });
+}
+
+// ---- booking wizard -------------------------------------------------------
+let wizard = null; // { table, step, agreed, overlay, profile }
+
+function startBooking() {
   const t = tableById(selectedId);
   if (!t || !canBook(t)) return;
-  const verb = boot.state.autoApprove ? 'Book' : 'Request';
-  const ok = confirm(`${verb} table ${t.label || ''} for ${money(t.price)}?\n\n`
-    + 'No payment is taken now — the organiser will send payment instructions to follow.');
-  if (!ok) return;
-  const json = await send(boot.bookUrl, 'POST', { table_id: t.id });
-  if (json && !json.error) {
-    // Booking made — go to the home page's "Your bookings" section.
-    window.location = boot.homeUrl;
+  wizard = {
+    table: t,
+    step: 1,
+    agreed: false,
+    profile: Object.assign({ socials: {}, categories: [] }, boot.state.vendor || {}),
+  };
+  wizard.profile.categories = (wizard.profile.categories || []).slice();
+  renderWizard();
+}
+
+function closeWizard() {
+  if (wizard && wizard.overlay) wizard.overlay.remove();
+  wizard = null;
+}
+
+function renderWizard() {
+  const t = wizard.table;
+  if (!wizard.overlay) {
+    wizard.overlay = document.createElement('div');
+    wizard.overlay.className = 'modal';
+    wizard.overlay.addEventListener('click', (e) => { if (e.target === wizard.overlay) closeWizard(); });
+    document.body.appendChild(wizard.overlay);
   }
+  const steps = ['Table', 'Your details', 'Conditions', 'Confirm'];
+  const dots = steps.map((s, i) =>
+    `<span class="wiz-dot${i + 1 === wizard.step ? ' active' : ''}${i + 1 < wizard.step ? ' done' : ''}">${i + 1}. ${s}</span>`
+  ).join('');
+
+  wizard.overlay.innerHTML =
+    `<div class="modal-card wiz-card">
+       <div class="wiz-steps">${dots}</div>
+       <div class="wiz-body">${stepBody(wizard.step, t)}</div>
+       <div class="wiz-foot">
+         ${wizard.step > 1 ? '<button class="btn-secondary" data-wiz="back">Back</button>' : '<button class="btn-link" data-wiz="cancel">Cancel</button>'}
+         <button class="btn-primary" data-wiz="next" ${nextDisabled() ? 'disabled' : ''}>${nextLabel()}</button>
+       </div>
+     </div>`;
+
+  wizard.overlay.querySelectorAll('[data-wiz]').forEach((b) => b.addEventListener('click', onWizClick));
+  if (wizard.step === 2) wireProfileStep();
+  if (wizard.step === 3) {
+    const cb = wizard.overlay.querySelector('#wiz-agree');
+    cb.addEventListener('change', () => { wizard.agreed = cb.checked; updateNext(); });
+  }
+}
+
+function stepBody(step, t) {
+  if (step === 1) {
+    return `<h3>Table ${esc(t.label || '')}</h3>
+      <dl class="bd-grid">
+        <div><dt>Price</dt><dd>${money(t.price)}</dd></div>
+        <div><dt>Size</dt><dd>${formatSize(t.width, t.height, t.shape === 'round')}</dd></div>
+        <div><dt>Power</dt><dd>${t.has_power ? 'Yes ⚡' : 'No'}</dd></div>
+        <div><dt>Status</dt><dd>Available</dd></div>
+      </dl>
+      <p class="muted small">No payment is taken here — the organiser will send payment
+        instructions to follow after you book.</p>`;
+  }
+  if (step === 2) {
+    const p = wizard.profile;
+    const chips = (p.categories || []).map((c) =>
+      `<span class="tag-chip"><span>${esc(c)}</span><button type="button" class="tag-chip-x" data-cat-remove="${esc(c)}">&times;</button></span>`
+    ).join('');
+    const opts = (boot.state.categorySuggestions || []).map((c) => `<option value="${esc(c)}"></option>`).join('');
+    return `<h3>Confirm your details</h3>
+      <p class="muted small">Please make sure this is accurate and up to date.</p>
+      <label>Business name<input type="text" id="wp_business" value="${esc(p.business_name || '')}"></label>
+      <label>Contact name<input type="text" id="wp_contact" value="${esc(p.contact_name || '')}"></label>
+      <div class="row">
+        <label>Phone<input type="text" id="wp_phone" value="${esc(p.phone || '')}"></label>
+        <label>Website<input type="text" id="wp_website" value="${esc(p.website || '')}"></label>
+      </div>
+      <label>What you sell
+        <div class="tag-chips" id="wp_chips">${chips}</div>
+        <div class="tag-input-row">
+          <input type="text" id="wp_cat" list="wiz-cats" placeholder="Add a category…" autocomplete="off">
+          <button type="button" class="btn-secondary sm" id="wp_cat_add">Add</button>
+        </div>
+        <datalist id="wiz-cats">${opts}</datalist>
+      </label>
+      <p class="muted small" id="wp_msg"></p>`;
+  }
+  if (step === 3) {
+    const html = boot.state.conditionsHtml || '<p class="muted">No conditions have been set.</p>';
+    return `<h3>Conditions, liability &amp; rules</h3>
+      <div class="wiz-conditions">${html}</div>
+      <label class="check"><input type="checkbox" id="wiz-agree" ${wizard.agreed ? 'checked' : ''}>
+        I have read and agree to the conditions, liability and rules.</label>`;
+  }
+  // step 4
+  const p = wizard.profile;
+  const verb = boot.state.autoApprove ? 'book' : 'request';
+  return `<h3>Confirm booking</h3>
+    <dl class="bd-grid">
+      <div><dt>Table</dt><dd>${esc(t.label || '')}</dd></div>
+      <div><dt>Price</dt><dd>${money(t.price)}</dd></div>
+      <div><dt>Business</dt><dd>${esc(p.business_name || '')}</dd></div>
+      <div><dt>Sells</dt><dd>${(p.categories || []).map(esc).join(', ') || '—'}</dd></div>
+    </dl>
+    <p class="muted small">You're about to ${verb} this table. No payment is taken now —
+      the organiser will send payment instructions to follow.</p>`;
+}
+
+function nextLabel() { return wizard.step === 4 ? (boot.state.autoApprove ? 'Confirm booking' : 'Send request') : 'Next'; }
+function nextDisabled() { return wizard.step === 3 && !wizard.agreed; }
+function updateNext() {
+  const btn = wizard.overlay.querySelector('[data-wiz="next"]');
+  if (btn) btn.disabled = nextDisabled();
+}
+
+function wireProfileStep() {
+  const add = () => {
+    const input = wizard.overlay.querySelector('#wp_cat');
+    const name = (input.value || '').trim();
+    if (name && !wizard.profile.categories.some((c) => c.toLowerCase() === name.toLowerCase())) {
+      wizard.profile.categories.push(name);
+      renderWizard();
+    }
+  };
+  wizard.overlay.querySelector('#wp_cat_add').addEventListener('click', add);
+  wizard.overlay.querySelector('#wp_cat').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); add(); }
+  });
+  wizard.overlay.querySelectorAll('[data-cat-remove]').forEach((b) => b.addEventListener('click', () => {
+    const name = b.getAttribute('data-cat-remove');
+    wizard.profile.categories = wizard.profile.categories.filter((c) => c !== name);
+    renderWizard();
+  }));
+}
+
+// Pull the editable profile fields out of the step-2 form into wizard.profile.
+function collectProfile() {
+  const g = (id) => { const el = wizard.overlay.querySelector(id); return el ? el.value.trim() : ''; };
+  wizard.profile.business_name = g('#wp_business');
+  wizard.profile.contact_name = g('#wp_contact');
+  wizard.profile.phone = g('#wp_phone');
+  wizard.profile.website = g('#wp_website');
+}
+
+async function onWizClick(e) {
+  const action = e.currentTarget.getAttribute('data-wiz');
+  if (action === 'cancel') return closeWizard();
+  if (action === 'back') { if (wizard.step === 2) collectProfile(); wizard.step--; return renderWizard(); }
+
+  // action === 'next'
+  if (wizard.step === 2) {
+    collectProfile();
+    const ok = await saveProfile();
+    if (!ok) return;
+  }
+  if (wizard.step < 4) { wizard.step++; return renderWizard(); }
+
+  // Final step: place the booking.
+  const json = await send(boot.bookUrl, 'POST', { table_id: wizard.table.id, terms_accepted: true });
+  if (json && !json.error) { closeWizard(); window.location = boot.homeUrl; }
+}
+
+async function saveProfile() {
+  const p = wizard.profile;
+  if (!p.business_name || !p.contact_name) {
+    const msg = wizard.overlay.querySelector('#wp_msg');
+    if (msg) msg.textContent = 'Business name and contact name are required.';
+    return false;
+  }
+  const body = {
+    business_name: p.business_name, contact_name: p.contact_name,
+    phone: p.phone, website: p.website, address: p.address,
+    socials: p.socials || {}, categories: p.categories || [],
+  };
+  const json = await send(boot.profileUrl, 'PUT', body);
+  if (json && json.vendor) {
+    boot.state.vendor = Object.assign({}, boot.state.vendor, json.vendor);
+    return true;
+  }
+  return !(json && json.error);
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 async function release() {

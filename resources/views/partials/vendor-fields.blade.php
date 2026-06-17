@@ -2,6 +2,8 @@
     use App\Support\VendorProfile;
     $vendor = $vendor ?? null;
     $socials = $vendor?->socials ?? [];
+    $categorySuggestions = $categorySuggestions ?? [];
+    $selectedCategories = old('categories', $vendor?->categories ?? []);
     // Inline SVG icons keyed by platform.
     $icons = [
         'facebook'  => '<path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0 0 22 12z"/>',
@@ -34,6 +36,29 @@
     <textarea name="address" rows="2">{{ old('address', $vendor?->address) }}</textarea>
 </label>
 
+<div class="tag-field" data-tag-field>
+    <span class="tag-field-label">What do you sell? <span class="muted">(add one or more categories)</span></span>
+    <div class="tag-chips" data-tag-chips>
+        @foreach ($selectedCategories as $cat)
+            <span class="tag-chip">
+                <span>{{ $cat }}</span>
+                <button type="button" class="tag-chip-x" data-tag-remove aria-label="Remove">&times;</button>
+                <input type="hidden" name="categories[]" value="{{ $cat }}">
+            </span>
+        @endforeach
+    </div>
+    <div class="tag-input-row">
+        <input type="text" class="tag-input" data-tag-input list="category-suggestions"
+               placeholder="e.g. Candles, Scarves, Decorations…" autocomplete="off">
+        <button type="button" class="btn-secondary sm" data-tag-add>Add</button>
+    </div>
+    <datalist id="category-suggestions">
+        @foreach ($categorySuggestions as $name)
+            <option value="{{ $name }}"></option>
+        @endforeach
+    </datalist>
+</div>
+
 <fieldset class="socials">
     <legend>Social media</legend>
     @foreach (VendorProfile::SOCIALS as $key => $label)
@@ -47,3 +72,45 @@
         </div>
     @endforeach
 </fieldset>
+
+<script>
+(function () {
+    // Lightweight category tag-input: add chips from the suggestion list or a
+    // custom typed value; each chip carries a hidden categories[] input.
+    document.querySelectorAll('[data-tag-field]').forEach(function (field) {
+        var chips = field.querySelector('[data-tag-chips]');
+        var input = field.querySelector('[data-tag-input]');
+        var addBtn = field.querySelector('[data-tag-add]');
+
+        function existing() {
+            return Array.from(chips.querySelectorAll('input[name="categories[]"]'))
+                .map(function (i) { return i.value.toLowerCase(); });
+        }
+        function addTag(name) {
+            name = (name || '').trim();
+            if (!name || existing().indexOf(name.toLowerCase()) !== -1) return;
+            var chip = document.createElement('span');
+            chip.className = 'tag-chip';
+            var label = document.createElement('span');
+            label.textContent = name;
+            var x = document.createElement('button');
+            x.type = 'button'; x.className = 'tag-chip-x'; x.innerHTML = '&times;';
+            x.setAttribute('aria-label', 'Remove');
+            x.addEventListener('click', function () { chip.remove(); });
+            var hidden = document.createElement('input');
+            hidden.type = 'hidden'; hidden.name = 'categories[]'; hidden.value = name;
+            chip.appendChild(label); chip.appendChild(x); chip.appendChild(hidden);
+            chips.appendChild(chip);
+        }
+        function commit() { addTag(input.value); input.value = ''; input.focus(); }
+
+        chips.querySelectorAll('[data-tag-remove]').forEach(function (btn) {
+            btn.addEventListener('click', function () { btn.closest('.tag-chip').remove(); });
+        });
+        addBtn.addEventListener('click', commit);
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commit(); }
+        });
+    });
+})();
+</script>

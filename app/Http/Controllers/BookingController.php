@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Event;
 use App\Models\EventTable;
+use App\Support\Conditions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -64,6 +66,7 @@ class BookingController extends Controller
             'vendor_id' => $vendor->id,
             'status' => $autoApprove ? 'booked' : 'held',
             'booked_at' => now(),
+            'terms_accepted_at' => $request->boolean('terms_accepted') ? now() : null,
         ]);
 
         return response()->json([
@@ -111,6 +114,13 @@ class BookingController extends Controller
             'autoApprove' => (bool) config('vendormap.booking.auto_approve_booking', true),
             'myCount' => $vendor ? $this->vendorTableCount($event, $vendor->id) : 0,
             'registrationOpen' => $event->registrationOpen(),
+            'units' => config('vendormap.units', 'metric'),
+            'conditionsHtml' => Conditions::html(),
+            'categorySuggestions' => Category::orderBy('name')->pluck('name'),
+            'vendor' => $vendor ? $vendor->only([
+                'business_name', 'contact_name', 'phone', 'address',
+                'website', 'socials', 'categories',
+            ]) : null,
         ];
     }
 

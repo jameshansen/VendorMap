@@ -29,6 +29,7 @@ class EventTable extends Model
         'status',    // available | held | booked
         'has_power', // electrical power available at this table
         'booked_at',
+        'terms_accepted_at', // when the vendor agreed to the conditions at booking
         'paid',      // booking has been paid for (marked by an admin)
         'paid_at',
         'notes',
@@ -45,6 +46,7 @@ class EventTable extends Model
             'price' => 'decimal:2',
             'has_power' => 'boolean',
             'booked_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
             'paid' => 'boolean',
             'paid_at' => 'datetime',
         ];

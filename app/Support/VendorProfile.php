@@ -28,6 +28,8 @@ class VendorProfile
             'phone'         => 'nullable|string|max:50',
             'address'       => 'nullable|string|max:500',
             'website'       => 'nullable|url|max:255',
+            'categories'    => 'nullable|array',
+            'categories.*'  => 'string|max:100',
         ];
 
         foreach (array_keys(self::SOCIALS) as $key) {
@@ -48,6 +50,15 @@ class VendorProfile
             }
         }
 
+        // De-duplicate and tidy the chosen category names.
+        $categories = [];
+        foreach ((array) $request->input('categories', []) as $name) {
+            $name = trim((string) $name);
+            if ($name !== '' && ! in_array($name, $categories, true)) {
+                $categories[] = $name;
+            }
+        }
+
         return [
             'business_name' => $request->input('business_name'),
             'contact_name'  => $request->input('contact_name'),
@@ -55,6 +66,7 @@ class VendorProfile
             'address'       => $request->input('address'),
             'website'       => $request->input('website'),
             'socials'       => $socials ?: null,
+            'categories'    => $categories ?: null,
         ];
     }
 }

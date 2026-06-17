@@ -9,6 +9,10 @@
 @section('body')
 <div class="designer">
     <header class="toolbar">
+        <a class="to-events" href="{{ route('admin.events.index') }}" title="Back to the event list">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+            Events
+        </a>
         <div class="brand">
             <span class="dot"></span>
             <select id="venue-select" class="venue-select" title="Venue for this event">
@@ -48,7 +52,7 @@
         </div>
 
         <div class="right">
-            <a class="back" href="{{ route('admin.events.index') }}">All events</a>
+            <button id="unit-toggle" class="ghost" type="button" title="Switch measurement units">cm</button>
             <span id="status" class="status">Loading…</span>
             <button id="save" class="save">Save Event and Layout</button>
         </div>
@@ -76,6 +80,19 @@
                 <p class="hint">Saved with “Save Event and Layout”.</p>
             </div>
 
+            {{-- Boundary (shown for the Boundary tool) --}}
+            <div id="panel-boundary" class="fields" hidden>
+                <h3>Room boundary</h3>
+                <p class="hint">Click on the floor to drop wall corners, or build a
+                    rectangular room from its size below.</p>
+                <div class="row">
+                    <label>Width (<span class="unit-bg">m</span>) <input id="b_width" type="number" step="0.1"></label>
+                    <label>Height (<span class="unit-bg">m</span>) <input id="b_height" type="number" step="0.1"></label>
+                </div>
+                <button id="b_recreate" class="btn-primary" type="button">Replace with rectangle</button>
+                <button id="b_clear" class="danger" type="button">Clear boundary</button>
+            </div>
+
             {{-- Preset palette (shown for door / power / table tools) --}}
             <div id="palette" class="palette" hidden>
                 <h3 id="palette-title">Presets</h3>
@@ -89,8 +106,8 @@
                 <label>Label <input id="t_label" type="text"></label>
                 <label>Price <input id="t_price" type="number" step="0.01"></label>
                 <div class="row">
-                    <label>Width (cm) <input id="t_width" type="number"></label>
-                    <label>Height (cm) <input id="t_height" type="number"></label>
+                    <label>Width (<span class="unit-sm">cm</span>) <input id="t_width" type="number"></label>
+                    <label>Height (<span class="unit-sm">cm</span>) <input id="t_height" type="number"></label>
                 </div>
                 <label>Rotation° <input id="t_rotation" type="number"></label>
                 <label>Shape
@@ -123,7 +140,7 @@
                     </select>
                 </label>
                 <div class="row">
-                    <label>Width (cm) <input id="d_width" type="number"></label>
+                    <label>Width (<span class="unit-sm">cm</span>) <input id="d_width" type="number"></label>
                     <label>Rotation° <input id="d_rotation" type="number"></label>
                 </div>
                 <button class="danger" data-delete>Delete door</button>
@@ -163,6 +180,7 @@
         venuePreviewBase: "{{ url('/admin/events/' . $event->id . '/venue') }}",
         venueNewUrl: "{{ route('admin.venue.create', $event) }}",
         venueDuplicateUrl: "{{ route('admin.venue.duplicate', $event) }}",
+        units: "{{ config('vendormap.units', 'metric') }}",
         csrf: "{{ csrf_token() }}",
     };
 </script>
