@@ -66,7 +66,7 @@ class ConfigBridgeServiceProvider extends ServiceProvider
                 'tables_per_vendor'    => (int) ($cfg['booking']['tables_per_vendor'] ?? 1),
                 'auto_approve_booking' => (bool) ($cfg['booking']['auto_approve_booking'] ?? true),
             ],
-            'vendormap.units' => in_array($cfg['units'] ?? 'metric', ['metric', 'imperial'], true)
+            'vendormap.units' => in_array($cfg['units'] ?? null, ['metric', 'imperial'], true)
                 ? $cfg['units']
                 : 'metric',
             'vendormap.recaptcha' => [
