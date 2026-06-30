@@ -336,7 +336,10 @@ function wireStage() {
     if (moved > 6) return;
     if (tool === 'select' || tool === 'details') {
       const owner = ownerOf(e.target);
-      if (owner && owner._kind) select(owner); else deselect();
+      const additive = e.evt && (e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey);
+      if (owner && owner._kind && owner._kind !== 'vertex' && additive && tool === 'select') toggleInSelection(owner);
+      else if (owner && owner._kind) select(owner);
+      else deselect();
     } else if (tool === 'table' || tool === 'door' || tool === 'power') {
       // Clicking an existing object means "select that", not "add another".
       const owner = ownerOf(e.target);
@@ -428,6 +431,12 @@ function selectInBox(box) {
   if (hits.length) setSelection(hits); else deselect();
 }
 
+// Shift/Ctrl-click adds or removes one node from the current selection.
+function toggleInSelection(node) {
+  const next = selection.includes(node) ? selection.filter((n) => n !== node) : selection.concat(node);
+  if (next.length) setSelection(next); else deselect();
+}
+
 function deselect() { selection = []; selected = null; tr.nodes([]); updatePanel(); }
 
 // ---------------------------------------------------------------------------
@@ -442,6 +451,8 @@ function setTool(next) {
   document.querySelectorAll('.tools button').forEach((b) => b.classList.toggle('active', b.dataset.tool === next));
   const editing = next === 'select' || next === 'details';
   stage.draggable(next === 'details'); // Select pans via right-drag, not left-drag
+  // Cursor: arrow for Select, grab for the pannable Details view, crosshair for placement.
+  stage.container().style.cursor = next === 'select' ? 'default' : next === 'details' ? 'grab' : 'crosshair';
   layer.find('.table, .door, .power').forEach((n) => n.draggable(editing));
   handleGroup.getChildren().forEach((h) => h.draggable(editing || next === 'boundary'));
   if (next === 'select') updatePanel(); else deselect();
