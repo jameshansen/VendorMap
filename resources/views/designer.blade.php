@@ -68,8 +68,10 @@
 
         <aside class="panel">
             <p id="hint" class="hint">
-                Select something to edit it, or pick a tool above to add features.
-                Scroll to zoom, drag empty space to pan. Right-click an object to save it as a preset.
+                In Select mode, click an item to edit it, or drag a box over several
+                items to edit them together (e.g. set one price on many tables).
+                Right-click and hold to pan; use Details mode to pan with left-drag.
+                Scroll to zoom. Right-click an object to save it as a preset.
             </p>
 
             {{-- Event details (shown for the Details tool) --}}
@@ -103,6 +105,24 @@
                 <h3 id="palette-title">Presets</h3>
                 <p class="hint">Click to pick the default, or drag one onto the floor.</p>
                 <div id="palette-list" class="palette-list"></div>
+            </div>
+
+            {{-- Multiple selected (group edit) --}}
+            <div id="panel-multi" class="fields" hidden>
+                <h3>Multiple selected</h3>
+                <p id="multi-summary" class="hint"></p>
+                <label>Price <input id="m_price" type="number" step="0.01" placeholder="—"></label>
+                <label>Status
+                    <select id="m_status">
+                        <option value="">— leave unchanged —</option>
+                        <option value="available">Available</option>
+                        <option value="held">Held</option>
+                        <option value="booked">Booked</option>
+                    </select>
+                </label>
+                <label class="check"><input id="m_power" type="checkbox"> Has electrical power</label>
+                <p class="hint">Price, status and power apply to the selected tables.</p>
+                <button class="danger" id="m_delete">Delete selected</button>
             </div>
 
             {{-- Table --}}

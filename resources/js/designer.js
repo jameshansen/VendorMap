@@ -52,7 +52,9 @@ const DEFAULT_PRESETS = {
 
 let stage, gridLayer, layer, tr;
 let tool = 'details';
-let selected = null;
+let selected = null;      // the single node being edited (null when 0 or many selected)
+let selection = [];       // all selected nodes (1 = single edit, >1 = group edit)
+let panMoved = false;     // set while right-drag panning, so contextmenu can suppress itself
 
 let boundaryPts = [];
 let doors = [];
@@ -283,12 +285,54 @@ function wireNode(node) {
 function ownerOf(target) { let n = target; while (n && !n._kind) n = n.getParent(); return n; }
 
 function wireStage() {
-  let down = null;
-  stage.on('pointerdown', () => { down = stage.getPointerPosition(); });
+  let down = null;        // left pointer-down pos, for click-vs-drag
+  let band = null;        // rubber-band rect
+  let bandStart = null;   // world coords where the band began
+  let panLast = null;     // last screen pos while right-drag panning
+
+  stage.on('pointerdown', (e) => {
+    const btn = e.evt ? e.evt.button : 0;
+    // Right-drag pans the view in Select mode (Select no longer left-drags the view).
+    if (btn === 2 && tool === 'select') { panLast = stage.getPointerPosition(); panMoved = false; return; }
+    if (btn !== 0) return;
+    down = stage.getPointerPosition();
+    // Empty-floor left-drag in Select mode draws a group-select box.
+    if (tool === 'select' && e.target === stage) {
+      bandStart = relativePointer();
+      band = new Konva.Rect({ x: bandStart.x, y: bandStart.y, width: 0, height: 0, stroke: C.boundaryStroke, strokeWidth: 2, dash: [8, 6], fill: 'rgba(47,109,240,0.08)', listening: false });
+      band.strokeScaleEnabled(false);
+      layer.add(band);
+    }
+  });
+
+  stage.on('pointermove', () => {
+    if (panLast) {
+      const p = stage.getPointerPosition();
+      const dx = p.x - panLast.x, dy = p.y - panLast.y;
+      if (Math.hypot(dx, dy) > 2) panMoved = true;
+      stage.position({ x: stage.x() + dx, y: stage.y() + dy });
+      panLast = p; hideContextMenu();
+      return;
+    }
+    if (band) {
+      const cur = relativePointer();
+      band.setAttrs({ x: Math.min(bandStart.x, cur.x), y: Math.min(bandStart.y, cur.y), width: Math.abs(cur.x - bandStart.x), height: Math.abs(cur.y - bandStart.y) });
+      layer.batchDraw();
+    }
+  });
+
   stage.on('pointerup', (e) => {
+    if (panLast) { panLast = null; return; }
+    if (band) {
+      const box = band.getClientRect();
+      band.destroy(); band = null; bandStart = null;
+      selectInBox(box); layer.batchDraw();
+      return;
+    }
     if (e.evt && e.evt.button === 2) return; // right-click is for the context menu
     const up = stage.getPointerPosition();
     const moved = down && up ? Math.hypot(up.x - down.x, up.y - down.y) : 0;
+    down = null;
     if (moved > 6) return;
     if (tool === 'select' || tool === 'details') {
       const owner = ownerOf(e.target);
@@ -356,14 +400,35 @@ function handlePlace(pos) {
   select(addObject(tool, preset, x, y));
 }
 
-function select(node) {
-  selected = node;
-  if (node._kind === 'table') tr.setAttrs({ enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'], rotateEnabled: true });
-  else if (node._kind === 'door') tr.setAttrs({ enabledAnchors: ['middle-left', 'middle-right'], rotateEnabled: false });
-  tr.nodes(node._kind === 'table' || node._kind === 'door' ? [node] : []);
+function select(node) { setSelection([node]); }
+
+function setSelection(nodes) {
+  selection = nodes;
+  selected = nodes.length === 1 ? nodes[0] : null;
+  if (nodes.length === 1) {
+    const node = nodes[0];
+    if (node._kind === 'table') tr.setAttrs({ enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right'], rotateEnabled: true });
+    else if (node._kind === 'door') tr.setAttrs({ enabledAnchors: ['middle-left', 'middle-right'], rotateEnabled: false });
+    tr.nodes(node._kind === 'table' || node._kind === 'door' ? [node] : []);
+  } else {
+    // Group select: transformer is just a highlight box; edit via the multi panel.
+    tr.setAttrs({ enabledAnchors: [], rotateEnabled: false });
+    tr.nodes(nodes);
+  }
   updatePanel();
 }
-function deselect() { selected = null; tr.nodes([]); updatePanel(); }
+
+// Pick every non-boundary node whose box overlaps the rubber-band (box is in screen coords).
+function selectInBox(box) {
+  const hits = layer.getChildren().filter((n) => {
+    if (!n._kind || n._kind === 'vertex') return false;
+    const r = n.getClientRect();
+    return r.x + r.width >= box.x && r.x <= box.x + box.width && r.y + r.height >= box.y && r.y <= box.y + box.height;
+  });
+  if (hits.length) setSelection(hits); else deselect();
+}
+
+function deselect() { selection = []; selected = null; tr.nodes([]); updatePanel(); }
 
 // ---------------------------------------------------------------------------
 // Toolbar + panel + presets
@@ -375,17 +440,18 @@ function wireToolbar() {
 function setTool(next) {
   tool = next;
   document.querySelectorAll('.tools button').forEach((b) => b.classList.toggle('active', b.dataset.tool === next));
-  const interactive = next === 'select' || next === 'details';
-  stage.draggable(interactive);
-  layer.find('.table, .door, .power').forEach((n) => n.draggable(interactive));
-  handleGroup.getChildren().forEach((h) => h.draggable(interactive || next === 'boundary'));
+  const editing = next === 'select' || next === 'details';
+  stage.draggable(next === 'details'); // Select pans via right-drag, not left-drag
+  layer.find('.table, .door, .power').forEach((n) => n.draggable(editing));
+  handleGroup.getChildren().forEach((h) => h.draggable(editing || next === 'boundary'));
   if (next === 'select') updatePanel(); else deselect();
 }
 
 function updatePanel() {
   document.getElementById('hint').hidden = true;
   document.getElementById('palette').hidden = true;
-  ['table', 'door', 'power', 'vertex', 'event', 'boundary'].forEach((k) => { document.getElementById('panel-' + k).hidden = true; });
+  ['table', 'door', 'power', 'vertex', 'event', 'boundary', 'multi'].forEach((k) => { document.getElementById('panel-' + k).hidden = true; });
+  if (selection.length > 1) { document.getElementById('panel-multi').hidden = false; populateMulti(); return; }
   if (selected) { document.getElementById('panel-' + selected._kind).hidden = false; populatePanel(); return; }
   if (tool === 'details') { document.getElementById('panel-event').hidden = false; return; }
   if (tool === 'boundary') { document.getElementById('panel-boundary').hidden = false; prefillBoundaryPanel(); return; }
@@ -465,6 +531,25 @@ function wirePanel() {
   on('p_voltage', 'input', () => { selected._model.voltage = Number(val('p_voltage')); });
   on('p_outlets', 'input', () => { selected._model.outlets = Number(val('p_outlets')); });
   document.querySelectorAll('[data-delete]').forEach((b) => b.addEventListener('click', deleteSelected));
+  // Group-edit panel: apply one value to every table in the selection.
+  const tablesIn = () => selection.filter((n) => n._kind === 'table');
+  on('m_price', 'input', () => {
+    if (val('m_price') === '') return;
+    const v = Number(val('m_price'));
+    tablesIn().forEach((n) => { n._model.price = v; n._price.text(money(v)); recenter(n._price, 0, 14); });
+    layer.batchDraw();
+  });
+  on('m_status', 'change', () => {
+    const s = val('m_status'); if (!s) return;
+    tablesIn().forEach((n) => { n._model.status = s; applyStyle(n._shape, s); });
+    layer.batchDraw();
+  });
+  on('m_power', 'change', () => {
+    const v = document.getElementById('m_power').checked;
+    tablesIn().forEach((n) => { n._model.has_power = v; n._powerBadge.visible(v); });
+    layer.batchDraw();
+  });
+  document.getElementById('m_delete').addEventListener('click', deleteSelection);
 }
 function applyStyle(shape, status) { const s = STATUS_STYLE[status] || STATUS_STYLE.available; shape.fill(s.fill); shape.stroke(s.stroke); }
 
@@ -480,6 +565,31 @@ function populatePanel() {
   } else if (selected._kind === 'power') {
     setVal('p_label', m.label || ''); setVal('p_amperage', m.amperage ?? 0); setVal('p_voltage', m.voltage ?? 0); setVal('p_outlets', m.outlets ?? 1);
   }
+}
+
+function populateMulti() {
+  const tablesSel = selection.filter((n) => n._kind === 'table');
+  const counts = selection.reduce((a, n) => { a[n._kind] = (a[n._kind] || 0) + 1; return a; }, {});
+  document.getElementById('multi-summary').textContent =
+    selection.length + ' selected — ' + Object.entries(counts).map(([k, v]) => v + ' ' + k + (v > 1 ? 's' : '')).join(', ');
+  const prices = [...new Set(tablesSel.map((n) => n._model.price))];
+  setVal('m_price', prices.length === 1 ? prices[0] : '');
+  const statuses = [...new Set(tablesSel.map((n) => n._model.status))];
+  setVal('m_status', statuses.length === 1 ? statuses[0] : '');
+  const noTables = tablesSel.length === 0;
+  ['m_price', 'm_status', 'm_power'].forEach((id) => { document.getElementById(id).disabled = noTables; });
+}
+
+function deleteSelection() {
+  selection.forEach((node) => {
+    const arr = node._kind === 'table' ? tables : node._kind === 'door' ? doors : power;
+    const i = arr.indexOf(node._model);
+    if (i >= 0) arr.splice(i, 1);
+    node.destroy();
+  });
+  deselect();
+  layer.draw();
+  markDirty();
 }
 
 function deleteSelected() {
@@ -506,6 +616,7 @@ function deleteSelected() {
 function wireContextMenu() {
   stage.on('contextmenu', (e) => {
     e.evt.preventDefault();
+    if (panMoved) { panMoved = false; return; } // it was a right-drag pan, not a menu request
     const owner = ownerOf(e.target);
     if (owner && owner._kind && owner._kind !== 'vertex') showContextMenu(owner, e.evt.clientX, e.evt.clientY);
     else hideContextMenu();
