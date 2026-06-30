@@ -111,6 +111,9 @@
         input.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commit(); }
         });
+        // Don't lose a typed-but-not-added category: flush it into a chip on submit.
+        var form = field.closest('form');
+        if (form) form.addEventListener('submit', function () { addTag(input.value); input.value = ''; });
     });
 })();
 </script>

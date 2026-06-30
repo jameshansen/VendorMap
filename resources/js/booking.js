@@ -336,6 +336,11 @@ function collectProfile() {
   wizard.profile.contact_name = g('#wp_contact');
   wizard.profile.phone = g('#wp_phone');
   wizard.profile.website = g('#wp_website');
+  // Don't lose a typed-but-not-added category.
+  const pendingCat = g('#wp_cat');
+  if (pendingCat && !wizard.profile.categories.some((c) => c.toLowerCase() === pendingCat.toLowerCase())) {
+    wizard.profile.categories.push(pendingCat);
+  }
 }
 
 async function onWizClick(e) {
