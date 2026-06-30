@@ -72,10 +72,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('events/{event}/designer', [DesignerController::class, 'show'])->name('designer.show');
         Route::post('events/{event}/layout', [DesignerController::class, 'save'])->name('designer.save');
 
-        // Designer-only tools: venue preview / create / duplicate
+        // Designer-only tools: venue preview / create / duplicate / rename
         Route::get('events/{event}/venue/{venue}', [VenueController::class, 'preview'])->name('venue.preview');
         Route::post('events/{event}/venue/new', [VenueController::class, 'create'])->name('venue.create');
         Route::post('events/{event}/venue/duplicate', [VenueController::class, 'duplicate'])->name('venue.duplicate');
+        Route::post('events/{event}/venue/{venue}/rename', [VenueController::class, 'rename'])->name('venue.rename');
 
         // Object presets used by the designer palette
         Route::get('presets', [PresetController::class, 'index'])->name('presets.index');

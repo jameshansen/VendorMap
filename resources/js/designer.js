@@ -703,6 +703,27 @@ function wireVenue() {
       .catch((err) => { log('venue switch failed', err); setStatus('Switch failed'); sel.value = String(selectedVenueId); });
   });
   document.getElementById('dup-venue').addEventListener('click', duplicateVenue);
+  document.getElementById('rename-venue').addEventListener('click', renameVenue);
+}
+// Rename in place: update the persisted name and the dropdown label only, so any
+// unsaved layout edits survive (unlike create/duplicate, which reload the venue).
+async function renameVenue() {
+  const sel = document.getElementById('venue-select');
+  const opt = sel.options[sel.selectedIndex];
+  const current = opt ? opt.text : '';
+  const name = (prompt('New name for this venue', current) || '').trim();
+  if (!name || name === current) return;
+  setStatus('Renaming…');
+  try {
+    const res = await fetch(boot.venuePreviewBase + '/' + selectedVenueId + '/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': boot.csrf },
+      body: JSON.stringify({ name }),
+    });
+    if (!res.ok) { setStatus('Rename failed'); return; }
+    if (opt) opt.text = name;
+    setStatus('Renamed');
+  } catch (e) { setStatus('Rename failed'); console.error(e); }
 }
 function createVenue() {
   if (!confirmDiscard()) return;

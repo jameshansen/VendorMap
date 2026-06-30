@@ -40,6 +40,15 @@ class VenueController extends Controller
         return response()->json($this->state($event, $venue));
     }
 
+    /** Rename a venue (slug is left untouched so any public URLs keep working). */
+    public function rename(Request $request, Event $event, Venue $venue): JsonResponse
+    {
+        $data = $request->validate(['name' => 'required|string|max:255']);
+        $venue->update(['name' => $data['name']]);
+
+        return response()->json($this->state($event, $venue));
+    }
+
     /** Copy a venue (outline, doors, power) into a new one and preview it. */
     public function duplicate(Request $request, Event $event): JsonResponse
     {

@@ -21,6 +21,7 @@
                 @endforeach
                 <option value="__new__">+ New venue…</option>
             </select>
+            <button id="rename-venue" class="ghost" title="Rename this venue">Rename</button>
             <button id="dup-venue" class="ghost" title="Duplicate this venue">Duplicate</button>
         </div>
 
