@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TableBooked;
 use App\Models\Category;
 use App\Models\Event;
 use App\Models\EventTable;
 use App\Support\Conditions;
+use App\Support\Notify;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -68,6 +70,18 @@ class BookingController extends Controller
             'booked_at' => now(),
             'terms_accepted_at' => $request->boolean('terms_accepted') ? now() : null,
         ]);
+
+        // Notify the admin and confirm to the vendor. Best-effort: Notify logs
+        // (never throws) so a mail hiccup can't fail an otherwise-good booking.
+        $held = ! $autoApprove;
+        Notify::mail(
+            config('vendormap.smtp.admin_notify'),
+            new TableBooked($event, $vendor, $table, held: $held, forAdmin: true),
+        );
+        Notify::mail(
+            $vendor->email ?: $request->user()->email,
+            new TableBooked($event, $vendor, $table, held: $held, forAdmin: false),
+        );
 
         return response()->json([
             'message' => $autoApprove

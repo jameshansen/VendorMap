@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BookingConfirmed;
 use App\Models\Event;
 use App\Models\EventTable;
+use App\Support\Notify;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -37,6 +39,15 @@ class BookingController extends Controller
                 'status' => 'booked',
                 'booked_at' => $table->booked_at ?? now(),
             ]);
+
+            // Let the vendor know their held table is now confirmed. Best-effort:
+            // Notify logs (never throws) so mail issues can't fail the confirm.
+            if ($vendor = $table->vendor) {
+                Notify::mail(
+                    $vendor->email ?: $vendor->user?->email,
+                    new BookingConfirmed($event, $vendor, $table),
+                );
+            }
 
             return back()->with('status', "Table {$table->label} confirmed.");
         }
