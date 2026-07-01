@@ -40,19 +40,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Outgoing email (SMTP)
+    | Outgoing email
     |--------------------------------------------------------------------------
     | Used to (a) alert an admin when a new vendor signs up, and (b) email a
-    | vendor when their account is approved or rejected. Leave "host" blank to
-    | disable real sending — messages are written to the Laravel log instead,
-    | and signups still succeed.
+    | vendor when their account is approved or rejected.
+    |
+    | Pick a "transport":
+    |   'sendmail' — hand mail to the server's local mail system (Postfix/
+    |                sendmail). Recommended when the box already runs an MTA:
+    |                no host, port, username, password or TLS needed. The
+    |                host/port/username/password/encryption keys are ignored.
+    |   'smtp'     — connect to an external SMTP server; fill in host..encryption.
+    |
+    | Leave "transport" as 'smtp' with a blank "host" to disable real sending —
+    | messages are written to the Laravel log instead, and signups still succeed.
     */
     'smtp' => [
+        'transport'    => 'smtp',                // 'sendmail' (local MTA) or 'smtp'
         'host'         => '',                    // e.g. smtp.gmail.com  (blank = log only)
         'port'         => 587,                   // 587 for TLS, 465 for SSL
         'username'     => '',
         'password'     => '',
         'encryption'   => 'tls',                 // 'tls', 'ssl', or null for none
+        'sendmail_path' => '/usr/sbin/sendmail -bs -i', // only used when transport = 'sendmail'
         'from_address' => 'no-reply@example.com',// the "From" address on outgoing mail
         'from_name'    => 'VendorMap',
         'admin_notify' => '',                    // address that receives new-signup alerts (blank = no alert)

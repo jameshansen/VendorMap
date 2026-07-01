@@ -77,16 +77,28 @@ class ConfigBridgeServiceProvider extends ServiceProvider
         ]);
     }
 
-    /** Point Laravel's mailer at the configured SMTP server (or log if none). */
+    /** Point Laravel's mailer at the configured transport (sendmail, SMTP, or log). */
     private function bridgeMail(array $smtp): void
     {
-        $host = $smtp['host'] ?? '';
-
         // From address applies regardless of transport so logged mail looks right.
         config([
             'mail.from.address' => $smtp['from_address'] ?? config('mail.from.address'),
             'mail.from.name'    => $smtp['from_name'] ?? config('mail.from.name'),
         ]);
+
+        // Hand mail to the local MTA (Postfix/sendmail) instead of talking SMTP.
+        // This mirrors the main site's setup: no host, port, credentials or TLS
+        // to localhost — the sendmail binary drops the message straight into the
+        // server's mail queue for delivery.
+        if (strtolower((string) ($smtp['transport'] ?? 'smtp')) === 'sendmail') {
+            config(['mail.default' => 'sendmail']);
+            if (! empty($smtp['sendmail_path'])) {
+                config(['mail.mailers.sendmail.path' => $smtp['sendmail_path']]);
+            }
+            return;
+        }
+
+        $host = $smtp['host'] ?? '';
 
         if ($host === '') {
             // No SMTP configured: keep whatever the .env default is (usually "log")
