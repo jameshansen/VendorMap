@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingCancelled;
 use App\Mail\TableBooked;
 use App\Models\Category;
 use App\Models\Event;
@@ -109,6 +110,13 @@ class BookingController extends Controller
         }
 
         $table->update(['vendor_id' => null, 'status' => 'available', 'booked_at' => null, 'paid' => false, 'paid_at' => null]);
+
+        // Notify the admin that a table was released. Best-effort: Notify logs
+        // (never throws) so mail issues can't fail an otherwise-good cancel.
+        Notify::mail(
+            config('vendormap.smtp.admin_notify'),
+            new BookingCancelled($event, $vendor, $table),
+        );
 
         return response()->json([
             'message' => 'Booking released.',
