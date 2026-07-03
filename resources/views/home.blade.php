@@ -17,12 +17,12 @@
 
     @auth
         @if ($vendor && ! $approved)
-            <div class="banner pending banner-lg">
+            <div class="banner banner-lg banner-review">
                 <span class="banner-icon">⏳</span>
                 <div>
                     <strong>Your account is pending approval.</strong>
                     <p>We review every request quickly — usually <strong>within 24 hours</strong>.
-                       You can browse events now and we'll email you the moment you're approved so you can start booking.</p>
+                       We'll email you the moment you're approved so you can start booking.</p>
                 </div>
             </div>
         @endif
