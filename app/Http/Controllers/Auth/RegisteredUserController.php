@@ -12,7 +12,11 @@ use App\Support\VendorProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -33,11 +37,25 @@ class RegisteredUserController extends Controller
                 ->withErrors(['email' => 'We could not verify your submission. Please try again.']);
         }
 
-        $validated = $request->validate(array_merge([
+        $validator = Validator::make($request->all(), array_merge([
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'application_note' => 'nullable|string|max:1000',
+            'verify_photo' => 'nullable|image|max:5120',
         ], VendorProfile::rules()));
+        $validator->after(fn ($v) => VendorProfile::requireVerification($v, $request));
+        $validated = $validator->validate();
+
+        // A verification photo (signup only) is stored as a file and its URL is
+        // appended to the note, so it lives in the one application_note field.
+        $note = $validated['application_note'] ?? null;
+        if ($request->hasFile('verify_photo')) {
+            $file = $request->file('verify_photo');
+            $name = date('Ymd_His') . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            File::ensureDirectoryExists(base_path('vphotos'));
+            $file->move(base_path('vphotos'), $name);
+            $note = trim(($note ? $note . "\n" : '') . URL::to('vphotos/' . $name));
+        }
 
         $user = User::create([
             'name' => $validated['contact_name'],
@@ -51,7 +69,7 @@ class RegisteredUserController extends Controller
             [
                 'status' => 'pending',
                 'email' => $validated['email'],
-                'application_note' => $validated['application_note'] ?? null,
+                'application_note' => $note,
             ]
         ));
 

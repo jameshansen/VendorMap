@@ -11,6 +11,7 @@ use App\Support\VendorProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -95,10 +96,12 @@ class GoogleController extends Controller
             return redirect()->route('home');
         }
 
-        $request->validate(array_merge(
+        $validator = Validator::make($request->all(), array_merge(
             ['application_note' => 'nullable|string|max:1000'],
             VendorProfile::rules()
         ));
+        $validator->after(fn ($v) => VendorProfile::requireVerification($v, $request));
+        $validator->validate();
 
         $vendor = $user->vendor()->create(array_merge(
             VendorProfile::attributes($request),

@@ -10,9 +10,10 @@
         <h1>Almost there, {{ $user->name }}</h1>
         <p class="muted">Tell us about your business to finish your application. An admin reviews every account before booking opens.</p>
 
-        @if ($errors->any())
+        @php $topKeys = collect($errors->keys())->reject(fn ($k) => $k === 'application_note'); @endphp
+        @if ($topKeys->isNotEmpty())
             <div class="form-error">
-                <ul>@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                <ul>@foreach ($topKeys as $key)@foreach ($errors->get($key) as $msg)<li>{{ $msg }}</li>@endforeach @endforeach</ul>
             </div>
         @endif
 
@@ -20,7 +21,10 @@
             @csrf
             @include('partials.vendor-fields')
 
-            <label>Anything to help us verify you? <span class="muted">(optional)</span>
+            @error('application_note')
+                <div class="form-error" role="alert">{{ $message }}</div>
+            @enderror
+            <label>Anything else to help us verify you?
                 <textarea name="application_note" rows="2" placeholder="e.g. links, references, what you sell">{{ old('application_note') }}</textarea>
             </label>
 

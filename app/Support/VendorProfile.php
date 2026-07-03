@@ -39,6 +39,23 @@ class VendorProfile
         return $rules;
     }
 
+    /**
+     * A vendor must give us something to check them against: a website, at least
+     * one social handle, or a written note. Flags the note field when none are set.
+     */
+    public static function requireVerification(\Illuminate\Validation\Validator $validator, Request $request): void
+    {
+        $hasWebsite = filled(trim((string) $request->input('website')));
+        $hasSocial = collect((array) $request->input('socials', []))
+            ->contains(fn ($v) => trim((string) $v) !== '');
+        $hasNote = filled(trim((string) $request->input('application_note')));
+
+        if (! $hasWebsite && ! $hasSocial && ! $hasNote) {
+            $validator->errors()->add('application_note',
+                'Please provide either a website or one social media above, or complete this text box with more information about your business');
+        }
+    }
+
     /** Pull the validated profile fields out of a request into model attributes. */
     public static function attributes(Request $request): array
     {

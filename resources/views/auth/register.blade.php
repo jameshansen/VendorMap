@@ -18,13 +18,14 @@
             <div class="or-divider"><span>or</span></div>
         @endif
 
-        @if ($errors->any())
+        @php $topKeys = collect($errors->keys())->reject(fn ($k) => $k === 'application_note'); @endphp
+        @if ($topKeys->isNotEmpty())
             <div class="form-error">
-                <ul>@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                <ul>@foreach ($topKeys as $key)@foreach ($errors->get($key) as $msg)<li>{{ $msg }}</li>@endforeach @endforeach</ul>
             </div>
         @endif
 
-        <form method="POST" action="{{ route('register') }}" class="stacked-form">
+        <form method="POST" action="{{ route('register') }}" class="stacked-form" enctype="multipart/form-data">
             @csrf
 
             {{-- Honeypot: must stay empty. Hidden from real users. --}}
@@ -48,8 +49,14 @@
                 </label>
             </div>
 
-            <label>Anything to help us verify you? <span class="muted">(optional)</span>
+            @error('application_note')
+                <div class="form-error" role="alert">{{ $message }}</div>
+            @enderror
+            <label>Anything else to help us verify you?
                 <textarea name="application_note" rows="2" placeholder="e.g. links, references, what you sell">{{ old('application_note') }}</textarea>
+            </label>
+            <label>Or attach a photo <span class="muted">(e.g. your stall or products — optional)</span>
+                <input type="file" name="verify_photo" accept="image/*">
             </label>
 
             @php $siteKey = config('vendormap.recaptcha.site_key'); @endphp
