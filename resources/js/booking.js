@@ -246,7 +246,10 @@ function renderWizard() {
   if (wizard.step === 2) wireProfileStep();
   if (wizard.step === 3) {
     const cb = wizard.overlay.querySelector('#wiz-agree');
-    cb.addEventListener('change', () => { wizard.agreed = cb.checked; updateNext(); });
+    cb.addEventListener('change', () => {
+      wizard.agreed = cb.checked;
+      if (cb.checked) wizard.overlay.querySelector('#wiz-agree-msg').hidden = true;
+    });
   }
 }
 
@@ -291,7 +294,8 @@ function stepBody(step, t) {
     return `<h3>Conditions, liability &amp; rules</h3>
       <div class="wiz-conditions">${html}</div>
       <label class="check"><input type="checkbox" id="wiz-agree" ${wizard.agreed ? 'checked' : ''}>
-        I have read and agree to the conditions, liability and rules.</label>`;
+        I have read and agree to the conditions, liability and rules.</label>
+      <p id="wiz-agree-msg" class="wiz-error" hidden>You must agree to the terms to continue.</p>`;
   }
   // step 4
   const p = wizard.profile;
@@ -308,11 +312,7 @@ function stepBody(step, t) {
 }
 
 function nextLabel() { return wizard.step === 4 ? (boot.state.autoApprove ? 'Confirm booking' : 'Send request') : 'Next'; }
-function nextDisabled() { return wizard.step === 3 && !wizard.agreed; }
-function updateNext() {
-  const btn = wizard.overlay.querySelector('[data-wiz="next"]');
-  if (btn) btn.disabled = nextDisabled();
-}
+function nextDisabled() { return false; }
 
 function wireProfileStep() {
   const add = () => {
@@ -354,6 +354,12 @@ async function onWizClick(e) {
   if (action === 'back') { if (wizard.step === 2) collectProfile(); wizard.step--; return renderWizard(); }
 
   // action === 'next'
+  if (wizard.step === 3 && !wizard.agreed) {
+    const msg = wizard.overlay.querySelector('#wiz-agree-msg');
+    msg.hidden = false;
+    wizard.overlay.querySelector('#wiz-agree').closest('.check').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   if (wizard.step === 2) {
     collectProfile();
     const ok = await saveProfile();
