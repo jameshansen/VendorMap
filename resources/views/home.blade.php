@@ -21,7 +21,7 @@
                 <span class="banner-icon">⏳</span>
                 <div>
                     <strong>Your account is pending approval.</strong>
-                    <p>We review every request quickly — usually <strong>within 24 hours</strong>.
+                    <p>We review every request quickly, usually <strong>within 24 hours</strong>.
                        We'll email you the moment you're approved so you can start booking.</p>
                 </div>
             </div>
