@@ -48,6 +48,15 @@
                                         <a class="muted-link" href="{{ route('events.show', $b->event) }}">View</a>
                                     @endif
                                 </div>
+                                @unless ($b->paid)
+                                    <p class="bl-note">
+                                        @if ($b->status === 'pending')
+                                            Your request has been received. The organiser will confirm it and send payment instructions to follow.
+                                        @else
+                                            Your table is booked. The organiser will send payment instructions to follow.
+                                        @endif
+                                    </p>
+                                @endunless
                             </li>
                         @endforeach
                     </ul>
