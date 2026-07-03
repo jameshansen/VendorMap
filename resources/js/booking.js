@@ -455,30 +455,41 @@ function wireZoom() {
   });
 }
 
-// Two-finger pinch to zoom the map (not the page). Anchored under the fingers and
-// rotation-safe — in portrait the plan is rotated 90°, so we go via the absolute transform.
+// Two-finger pinch to zoom the map (not the page). Structure follows Konva's official
+// multi-touch demo (the dragStopped dance so single-finger pan resumes after a pinch),
+// but the re-anchoring goes through the absolute transform so it survives the 90° rotation
+// the plan gets in portrait — the demo's flat pointTo math assumes no rotation.
 function wirePinch() {
+  Konva.hitOnDragEnabled = true; // keep touch tracking alive if a drag is mid-flight
+
   // Belt-and-suspenders for iOS: stop the browser pinch-zooming the page over the map.
   stage.container().addEventListener('touchmove', (e) => { if (e.touches.length >= 2) e.preventDefault(); }, { passive: false });
 
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-  let lastDist = 0, lastCenter = null;
+  let lastDist = 0, lastCenter = null, dragStopped = false;
 
-  // A second finger means pinch, not pan — take dragging out of the picture entirely,
-  // otherwise Konva drags one finger while we zoom, and the two fight.
+  // A tap/pan on a table arms a drag in Konva's drag manager; if it's still armed when the
+  // second finger lands it activates mid-pinch and fights the zoom. Cancel it up front.
   stage.on('touchstart', (e) => {
     if (e.evt.touches.length >= 2) {
-      if (stage.isDragging()) stage.stopDrag();
-      stage.draggable(false);
-      lastDist = 0; lastCenter = null;
+      stage.stopDrag();
+      if (Konva.DD && Konva.DD._dragElements) Konva.DD._dragElements.clear();
+      dragStopped = false; lastDist = 0; lastCenter = null;
     }
   });
 
   stage.on('touchmove', (e) => {
-    const [t1, t2] = e.evt.touches;
+    const t1 = e.evt.touches[0], t2 = e.evt.touches[1];
+
+    // One finger again after a pinch: hand panning back to Konva's drag.
+    if (t1 && !t2 && !stage.isDragging() && dragStopped) { stage.startDrag(); dragStopped = false; }
     if (!t1 || !t2) return;
+
     e.evt.preventDefault();
+    // A tap can arm a drag that activates on the first pinch frame — kill it every frame so
+    // Konva's dragging never fights the zoom.
+    if (stage.isDragging()) { dragStopped = true; stage.stopDrag(); }
 
     const rect = stage.container().getBoundingClientRect();
     const p1 = { x: t1.clientX - rect.left, y: t1.clientY - rect.top };
@@ -487,7 +498,7 @@ function wirePinch() {
     if (!lastCenter) { lastCenter = center; lastDist = d; return; }
 
     const model = stage.getAbsoluteTransform().copy().invert().point(center);
-    const scale = Math.min(4, Math.max(0.05, stage.scaleX() * (d / lastDist)));
+    const scale = Math.min(4, Math.max(0.05, stage.scaleX() * (d / (lastDist || d))));
     stage.scale({ x: scale, y: scale });
     // Put that model point back under the (possibly moved) finger midpoint.
     const at = stage.getAbsoluteTransform().point(model);
@@ -499,8 +510,7 @@ function wirePinch() {
   });
 
   stage.on('touchend', (e) => {
-    if (e.evt.touches.length < 2) { lastDist = 0; lastCenter = null; }
-    if (e.evt.touches.length === 0) stage.draggable(true); // restore single-finger pan
+    if (!e.evt.touches || e.evt.touches.length < 2) { lastDist = 0; lastCenter = null; }
   });
 }
 
