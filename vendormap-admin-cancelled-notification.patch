@@ -1,0 +1,106 @@
+diff --git a/app/Http/Controllers/BookingController.php b/app/Http/Controllers/BookingController.php
+index 2c46bd4..ee660ce 100644
+--- a/app/Http/Controllers/BookingController.php
++++ b/app/Http/Controllers/BookingController.php
+@@ -2,6 +2,7 @@
+ 
+ namespace App\Http\Controllers;
+ 
++use App\Mail\BookingCancelled;
+ use App\Mail\TableBooked;
+ use App\Models\Category;
+ use App\Models\Event;
+@@ -110,6 +111,13 @@ public function destroy(Request $request, Event $event, EventTable $table): Json
+ 
+         $table->update(['vendor_id' => null, 'status' => 'available', 'booked_at' => null, 'paid' => false, 'paid_at' => null]);
+ 
++        // Notify the admin that a table was released. Best-effort: Notify logs
++        // (never throws) so mail issues can't fail an otherwise-good cancel.
++        Notify::mail(
++            config('vendormap.smtp.admin_notify'),
++            new BookingCancelled($event, $vendor, $table),
++        );
++
+         return response()->json([
+             'message' => 'Booking released.',
+             'state' => $this->state($event, $request),
+diff --git a/app/Mail/BookingCancelled.php b/app/Mail/BookingCancelled.php
+new file mode 100644
+index 0000000..527331b
+--- /dev/null
++++ b/app/Mail/BookingCancelled.php
+@@ -0,0 +1,43 @@
++<?php
++
++namespace App\Mail;
++
++use App\Models\Event;
++use App\Models\EventTable;
++use App\Models\Vendor;
++use Illuminate\Bus\Queueable;
++use Illuminate\Mail\Mailable;
++use Illuminate\Mail\Mailables\Content;
++use Illuminate\Mail\Mailables\Envelope;
++use Illuminate\Queue\SerializesModels;
++
++/** Sent to the site admin when a vendor releases (cancels) their table. */
++class BookingCancelled extends Mailable
++{
++    use Queueable, SerializesModels;
++
++    public function __construct(
++        public Event $event,
++        public Vendor $vendor,
++        public EventTable $table,
++    ) {}
++
++    public function envelope(): Envelope
++    {
++        return new Envelope(
++            subject: "Table cancelled: {$this->vendor->business_name} — {$this->event->name}",
++        );
++    }
++
++    public function content(): Content
++    {
++        return new Content(
++            view: 'emails.booking-cancelled',
++            with: [
++                'event' => $this->event,
++                'vendor' => $this->vendor,
++                'table' => $this->table,
++            ],
++        );
++    }
++}
+diff --git a/resources/views/emails/booking-cancelled.blade.php b/resources/views/emails/booking-cancelled.blade.php
+new file mode 100644
+index 0000000..caea76f
+--- /dev/null
++++ b/resources/views/emails/booking-cancelled.blade.php
+@@ -0,0 +1,25 @@
++<!DOCTYPE html>
++<html lang="en">
++<body style="font-family: Arial, sans-serif; color:#1b2430; line-height:1.5;">
++    <h2>Table cancelled</h2>
++    <p>
++        <strong>{{ $vendor->business_name }}</strong>
++        has cancelled their table for <strong>{{ $event->name }}</strong>.
++        The table is now available again.
++    </p>
++    <table cellpadding="6" style="border-collapse:collapse;">
++        <tr><td><strong>Event</strong></td><td>{{ $event->name }}</td></tr>
++        @if ($event->starts_at)
++            <tr><td><strong>Date</strong></td><td>{{ $event->starts_at->format('D j M Y, g:ia') }}</td></tr>
++        @endif
++        <tr><td><strong>Table</strong></td><td>{{ $table->label ?: ('#' . $table->id) }}</td></tr>
++        <tr><td><strong>Business</strong></td><td>{{ $vendor->business_name }}</td></tr>
++        <tr><td><strong>Contact</strong></td><td>{{ $vendor->contact_name }}</td></tr>
++        <tr><td><strong>Email</strong></td><td>{{ $vendor->email }}</td></tr>
++        <tr><td><strong>Phone</strong></td><td>{{ $vendor->phone }}</td></tr>
++    </table>
++    <p>Manage bookings for this event:
++        <a href="{{ route('admin.bookings.index', $event) }}">{{ route('admin.bookings.index', $event) }}</a>
++    </p>
++</body>
++</html>
