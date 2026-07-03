@@ -52,8 +52,8 @@ class RegisteredUserController extends Controller
         if ($request->hasFile('verify_photo')) {
             $file = $request->file('verify_photo');
             $name = date('Ymd_His') . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            File::ensureDirectoryExists(base_path('vphotos'));
-            $file->move(base_path('vphotos'), $name);
+            File::ensureDirectoryExists(public_path('vphotos'));
+            $file->move(public_path('vphotos'), $name);
             $note = trim(($note ? $note . "\n" : '') . URL::to('vphotos/' . $name));
         }
 
