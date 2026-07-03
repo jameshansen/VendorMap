@@ -52,9 +52,14 @@ function init() {
   // Clicking empty space clears the selection.
   stage.on('click tap', (e) => { if (e.target === stage) selectTable(null); });
 
-  window.addEventListener('resize', () => {
+  const resize = () => {
     stage.width(container.clientWidth);
     stage.height(container.clientHeight);
+  };
+  window.addEventListener('resize', resize);
+  // Orientation flip changes both the layout and whether we rotate the plan — refit.
+  window.matchMedia('(orientation: portrait)').addEventListener('change', () => {
+    requestAnimationFrame(() => { resize(); fitView(); });
   });
   updatePanel();
 }
@@ -452,14 +457,28 @@ function fitView() {
     (data.venue.doors || []).forEach((d) => pts.push({ x: d.x, y: d.y }));
     (data.venue.power_outlets || []).forEach((p) => pts.push({ x: p.x, y: p.y }));
   }
-  if (pts.length < 2) { stage.scale({ x: 0.3, y: 0.3 }); stage.position({ x: 60, y: 60 }); return; }
+  if (pts.length < 2) { stage.rotation(0); stage.scale({ x: 0.3, y: 0.3 }); stage.position({ x: 60, y: 60 }); return; }
 
   const xs = pts.map((p) => p.x), ys = pts.map((p) => p.y);
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const bw = maxX - minX, bh = maxY - minY;
+  const vw = stage.width(), vh = stage.height();
   const pad = 160;
-  const scale = Math.min(stage.width() / (maxX - minX + pad * 2), stage.height() / (maxY - minY + pad * 2));
-  stage.scale({ x: scale, y: scale });
-  stage.position({ x: -(minX - pad) * scale, y: -(minY - pad) * scale });
+
+  // On a phone in portrait, spin a wide plan 90° so it fills the tall viewport instead of shrinking.
+  // ponytail: whole-stage rotation, so labels turn sideways too. Counter-rotate labels only if asked.
+  const portrait = window.matchMedia('(max-width: 900px) and (orientation: portrait)').matches;
+  if (portrait && bw > bh) {
+    const scale = Math.min(vw / (bh + pad * 2), vh / (bw + pad * 2));
+    stage.rotation(90);
+    stage.scale({ x: scale, y: scale });
+    stage.position({ x: scale * (pad + maxY), y: scale * (pad - minX) });
+  } else {
+    const scale = Math.min(vw / (bw + pad * 2), vh / (bh + pad * 2));
+    stage.rotation(0);
+    stage.scale({ x: scale, y: scale });
+    stage.position({ x: -(minX - pad) * scale, y: -(minY - pad) * scale });
+  }
 }
 
 function polygonToPoints(area) {
