@@ -20,14 +20,19 @@
                         <dl class="vendor-meta">
                             <div><dt>Contact</dt><dd>{{ $vendor->contact_name ?: '—' }}</dd></div>
                             <div><dt>Email</dt><dd>{{ $vendor->email ?: $vendor->user?->email ?: '—' }}</dd></div>
+                            @if ($vendor->user && $vendor->user->email !== $vendor->email)
+                                <div><dt>Login account</dt><dd>{{ $vendor->user->email }}</dd></div>
+                            @endif
                             <div><dt>Phone</dt><dd>{{ $vendor->phone ?: '—' }}</dd></div>
                             <div><dt>Address</dt><dd>{{ $vendor->address ?: '—' }}</dd></div>
                             <div><dt>Website</dt><dd>{{ $vendor->website ?: '—' }}</dd></div>
+                            <div><dt>Products</dt><dd>{{ !empty($vendor->categories) ? implode(', ', $vendor->categories) : '—' }}</dd></div>
+                            <div><dt>Submitted</dt><dd>{{ $vendor->created_at?->format('D j M Y, g:ia') ?? '—' }}</dd></div>
                         </dl>
                         @if (!empty($vendor->socials))
                             <p class="vendor-socials">
                                 @foreach ($vendor->socials as $platform => $handle)
-                                    @if ($handle)<span class="tag">{{ $platform }}: {{ $handle }}</span>@endif
+                                    @if ($handle)<span class="tag">{{ \App\Support\VendorProfile::SOCIALS[$platform] ?? $platform }}: {{ $handle }}</span>@endif
                                 @endforeach
                             </p>
                         @endif
