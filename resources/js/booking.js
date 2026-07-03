@@ -46,6 +46,7 @@ function init() {
   render();
   fitView();
   wireZoom();
+  wirePinch();
   wireButtons();
   wireUnits();
 
@@ -452,6 +453,45 @@ function wireZoom() {
     stage.scale({ x: next, y: next });
     stage.position({ x: pointer.x - to.x * next, y: pointer.y - to.y * next });
   });
+}
+
+// Two-finger pinch to zoom the map (not the page). Anchored under the fingers and
+// rotation-safe — in portrait the plan is rotated 90°, so we go via the absolute transform.
+function wirePinch() {
+  // Belt-and-suspenders for iOS: stop the browser pinch-zooming the page over the map.
+  stage.container().addEventListener('touchmove', (e) => { if (e.touches.length >= 2) e.preventDefault(); }, { passive: false });
+
+  const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+  let lastDist = 0, lastCenter = null, dragStopped = false;
+
+  stage.on('touchmove', (e) => {
+    const [t1, t2] = e.evt.touches;
+    if (t1 && !t2 && dragStopped) { stage.startDrag(); dragStopped = false; } // resume single-finger pan
+    if (!t1 || !t2) return;
+
+    e.evt.preventDefault();
+    if (stage.isDragging()) { stage.stopDrag(); dragStopped = true; }
+
+    const rect = stage.container().getBoundingClientRect();
+    const p1 = { x: t1.clientX - rect.left, y: t1.clientY - rect.top };
+    const p2 = { x: t2.clientX - rect.left, y: t2.clientY - rect.top };
+    const center = mid(p1, p2), d = dist(p1, p2);
+    if (!lastCenter) { lastCenter = center; lastDist = d; return; }
+
+    const model = stage.getAbsoluteTransform().copy().invert().point(center);
+    const scale = Math.min(4, Math.max(0.05, stage.scaleX() * (d / lastDist)));
+    stage.scale({ x: scale, y: scale });
+    // Put that model point back under the (possibly moved) finger midpoint.
+    const at = stage.getAbsoluteTransform().point(model);
+    stage.position({
+      x: stage.x() + (2 * center.x - lastCenter.x) - at.x,
+      y: stage.y() + (2 * center.y - lastCenter.y) - at.y,
+    });
+    lastDist = d; lastCenter = center;
+  });
+
+  stage.on('touchend', (e) => { if (e.evt.touches.length < 2) { lastDist = 0; lastCenter = null; } });
 }
 
 // Fit to the boundary if present, otherwise to whatever elements exist.

@@ -275,7 +275,7 @@ a { color: var(--accent); }
 
 /* booking screen: full-height map + right detail panel */
 .booking-body { display: flex; height: calc(100vh - 60px); min-height: 0; }
-.booking-body .stage { flex: 1; }
+.booking-body .stage { flex: 1; touch-action: none; }
 .booking-panel { width: 320px; }
 .booking-panel .panel-head { margin-bottom: 1rem; }
 .booking-panel .panel-head h2 { margin: .35rem 0 .15rem; font-size: 1.2rem; }
