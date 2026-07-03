@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\NewVendorSignup;
+use App\Mail\VendorPending;
 use App\Models\User;
 use App\Support\BotGuard;
 use App\Support\Notify;
@@ -55,6 +56,7 @@ class RegisteredUserController extends Controller
         ));
 
         Notify::mail(config('vendormap.smtp.admin_notify'), new NewVendorSignup($vendor));
+        Notify::mail($vendor->email, new VendorPending($vendor));
 
         Auth::login($user);
         $request->session()->regenerate();

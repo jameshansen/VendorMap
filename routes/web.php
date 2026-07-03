@@ -54,6 +54,11 @@ Route::middleware('approved.vendor')->group(function () {
     Route::delete('/events/{event}/bookings/{table}', [BookingController::class, 'destroy'])->name('events.unbook');
 });
 
+// One-click vendor approval straight from the admin notification email.
+// No admin login required — the signed URL is the credential.
+Route::get('vendors/{vendor}/approve', [AdminVendorController::class, 'approveViaLink'])
+    ->middleware('signed')->name('vendors.approve.link');
+
 // ---------------------------------------------------------------------------
 // Admin panel (separate login; credentials live in config.php)
 // ---------------------------------------------------------------------------

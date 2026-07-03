@@ -161,6 +161,9 @@ a { color: var(--accent); }
 .flash { background: rgba(31,157,104,0.12); border: 1px solid var(--green); color: #14613f; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1.2rem; }
 .banner { padding: .9rem 1.1rem; border-radius: 10px; margin-bottom: 1.5rem; }
 .banner.pending { background: rgba(201,145,42,0.12); border: 1px solid var(--amber); color: #7a5708; }
+.banner-lg { display: flex; gap: 1rem; align-items: flex-start; padding: 1.4rem 1.6rem; border-width: 2px; font-size: 1.05rem; }
+.banner-lg .banner-icon { font-size: 1.8rem; line-height: 1; }
+.banner-lg p { margin: .4rem 0 0; font-weight: 400; }
 .form-error { background: rgba(207,75,75,0.10); border: 1px solid var(--booked); color: #8a2b2b; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1.2rem; }
 .form-error ul { margin: 0; padding-left: 1.1rem; }
 

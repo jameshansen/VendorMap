@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\NewVendorSignup;
+use App\Mail\VendorPending;
 use App\Models\User;
 use App\Support\Notify;
 use App\Support\VendorProfile;
@@ -112,6 +113,7 @@ class GoogleController extends Controller
         $user->update(['name' => $vendor->contact_name]);
 
         Notify::mail(config('vendormap.smtp.admin_notify'), new NewVendorSignup($vendor));
+        Notify::mail($vendor->email, new VendorPending($vendor));
 
         return redirect()->route('home')->with('status',
             'Thanks! Your account is pending approval — we\'ll email you when it\'s ready.');

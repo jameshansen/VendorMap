@@ -35,6 +35,19 @@ class VendorController extends Controller
         return back()->with('status', "{$vendor->business_name} approved.");
     }
 
+    /** One-click approval from the signup email — no admin session, signature is the auth. */
+    public function approveViaLink(Vendor $vendor): View
+    {
+        $already = $vendor->status === 'approved';
+
+        if (! $already) {
+            $vendor->update(['status' => 'approved', 'approved_at' => now()]);
+            Notify::mail($this->vendorEmail($vendor), new VendorApproved($vendor));
+        }
+
+        return view('admin.vendors.approved', ['vendor' => $vendor, 'already' => $already]);
+    }
+
     public function reject(Request $request, Vendor $vendor): RedirectResponse
     {
         $vendor->update([

@@ -14,8 +14,15 @@
             <tr><td valign="top"><strong>Note</strong></td><td>{{ $vendor->application_note }}</td></tr>
         @endif
     </table>
-    <p>Review and approve them in the admin panel:
-        <a href="{{ route('admin.vendors.index') }}">{{ route('admin.vendors.index') }}</a>
+    <p style="margin:24px 0;">
+        <a href="{{ $approveUrl }}" style="display:inline-block;background:#1f9d55;color:#fff;
+           text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:bold;">
+            ✓ Approve this vendor
+        </a>
+    </p>
+    <p style="color:#5a6472;font-size:13px;">One click approves them instantly — no admin login needed.
+        Prefer to review first? Open the
+        <a href="{{ route('admin.vendors.index') }}">admin panel</a>.
     </p>
 </body>
 </html>

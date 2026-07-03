@@ -8,10 +8,9 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\URL;
 
-/** Sent to the site admin when a new vendor applies. */
-class NewVendorSignup extends Mailable
+/** Sent to a vendor right after they sign up, confirming their application is pending. */
+class VendorPending extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -19,14 +18,11 @@ class NewVendorSignup extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'New vendor application: ' . $this->vendor->business_name);
+        return new Envelope(subject: 'Your VendorMap application is being reviewed');
     }
 
     public function content(): Content
     {
-        return new Content(view: 'emails.vendor-signup', with: [
-            'vendor' => $this->vendor,
-            'approveUrl' => URL::signedRoute('vendors.approve.link', $this->vendor),
-        ]);
+        return new Content(view: 'emails.vendor-pending', with: ['vendor' => $this->vendor]);
     }
 }
