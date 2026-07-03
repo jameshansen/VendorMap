@@ -41,7 +41,8 @@ class VendorProfile
 
     /**
      * A vendor must give us something to check them against: a website, at least
-     * one social handle, or a written note. Flags the note field when none are set.
+     * one social handle, a written note, or a photo. Flags the note field when
+     * none are present.
      */
     public static function requireVerification(\Illuminate\Validation\Validator $validator, Request $request): void
     {
@@ -49,10 +50,11 @@ class VendorProfile
         $hasSocial = collect((array) $request->input('socials', []))
             ->contains(fn ($v) => trim((string) $v) !== '');
         $hasNote = filled(trim((string) $request->input('application_note')));
+        $hasPhoto = $request->hasFile('verify_photo');
 
-        if (! $hasWebsite && ! $hasSocial && ! $hasNote) {
+        if (! $hasWebsite && ! $hasSocial && ! $hasNote && ! $hasPhoto) {
             $validator->errors()->add('application_note',
-                'Please provide either a website or one social media above, or complete this text box with more information about your business');
+                'Please provide either a website or one social media above, or provide more information below or a photo so we can verify your account');
         }
     }
 

@@ -49,13 +49,13 @@
                 </label>
             </div>
 
-            @error('application_note')
-                <div class="form-error" role="alert">{{ $message }}</div>
-            @enderror
+            <div id="verify-warning" class="notice-green" role="alert" @unless ($errors->has('application_note')) style="display:none" @endunless>
+                {{ $errors->first('application_note') ?: 'Please provide either a website or one social media above, or provide more information below or a photo so we can verify your account' }}
+            </div>
             <label>Anything else to help us verify you?
                 <textarea name="application_note" rows="2" placeholder="e.g. links, references, what you sell">{{ old('application_note') }}</textarea>
             </label>
-            <label>Or attach a photo <span class="muted">(e.g. your stall or products — optional)</span>
+            <label>Attaching a photo of your products will help us verify you
                 <input type="file" name="verify_photo" accept="image/*">
             </label>
 
@@ -74,4 +74,26 @@
 @if (config('vendormap.recaptcha.site_key'))
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 @endif
+
+<script>
+(function () {
+    // Block submit if the vendor gave us nothing to verify them by: no website,
+    // no social, no note, no photo. Shows the notice inline (no page reload).
+    var form = document.querySelector('.stacked-form');
+    if (!form) return;
+    var warning = document.getElementById('verify-warning');
+    form.addEventListener('submit', function (e) {
+        var val = function (sel) { var el = form.querySelector(sel); return el ? el.value.trim() : ''; };
+        var photo = form.querySelector('[name="verify_photo"]');
+        var hasPhoto = photo && photo.files && photo.files.length > 0;
+        var hasSocial = Array.prototype.some.call(
+            form.querySelectorAll('[name^="socials["]'), function (i) { return i.value.trim() !== ''; });
+        if (val('[name="website"]') === '' && !hasSocial && val('[name="application_note"]') === '' && !hasPhoto) {
+            e.preventDefault();
+            warning.style.display = '';
+            warning.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+})();
+</script>
 @endsection

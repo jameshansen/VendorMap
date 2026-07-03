@@ -167,6 +167,7 @@ a { color: var(--accent); }
 .banner-lg .banner-icon { font-size: 1.8rem; line-height: 1; }
 .banner-lg p { margin: .4rem 0 0; font-weight: 400; }
 .form-error { background: rgba(207,75,75,0.10); border: 1px solid var(--booked); color: #8a2b2b; padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1.2rem; }
+.notice-green { background: rgba(31,157,104,0.10); border: 1px solid var(--green); color: #14613f; padding: .75rem 1rem; border-radius: 8px; margin-bottom: .75rem; }
 .form-error ul { margin: 0; padding-left: 1.1rem; }
 
 /* badges */

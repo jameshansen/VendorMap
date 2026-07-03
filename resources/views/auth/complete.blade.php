@@ -22,7 +22,7 @@
             @include('partials.vendor-fields')
 
             @error('application_note')
-                <div class="form-error" role="alert">{{ $message }}</div>
+                <div class="notice-green" role="alert">{{ $message }}</div>
             @enderror
             <label>Anything else to help us verify you?
                 <textarea name="application_note" rows="2" placeholder="e.g. links, references, what you sell">{{ old('application_note') }}</textarea>
