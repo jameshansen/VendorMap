@@ -293,6 +293,7 @@ a { color: var(--accent); }
 .booking-list li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; padding: .7rem .9rem; border: 1px solid var(--border); border-radius: 8px; }
 .bl-main { display: flex; flex-direction: column; }
 .bl-tags { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.bl-note { flex-basis: 100%; margin: 0; font-size: .85rem; background: rgba(31,157,104,0.10); border: 1px solid var(--green); color: #14613f; padding: .5rem .7rem; border-radius: 6px; }
 
 /* ---- admin shell ---- */
 .admin-shell { min-height: 100vh; }
