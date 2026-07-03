@@ -463,15 +463,22 @@ function wirePinch() {
 
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
   const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-  let lastDist = 0, lastCenter = null, dragStopped = false;
+  let lastDist = 0, lastCenter = null;
+
+  // A second finger means pinch, not pan — take dragging out of the picture entirely,
+  // otherwise Konva drags one finger while we zoom, and the two fight.
+  stage.on('touchstart', (e) => {
+    if (e.evt.touches.length >= 2) {
+      if (stage.isDragging()) stage.stopDrag();
+      stage.draggable(false);
+      lastDist = 0; lastCenter = null;
+    }
+  });
 
   stage.on('touchmove', (e) => {
     const [t1, t2] = e.evt.touches;
-    if (t1 && !t2 && dragStopped) { stage.startDrag(); dragStopped = false; } // resume single-finger pan
     if (!t1 || !t2) return;
-
     e.evt.preventDefault();
-    if (stage.isDragging()) { stage.stopDrag(); dragStopped = true; }
 
     const rect = stage.container().getBoundingClientRect();
     const p1 = { x: t1.clientX - rect.left, y: t1.clientY - rect.top };
@@ -491,7 +498,10 @@ function wirePinch() {
     lastDist = d; lastCenter = center;
   });
 
-  stage.on('touchend', (e) => { if (e.evt.touches.length < 2) { lastDist = 0; lastCenter = null; } });
+  stage.on('touchend', (e) => {
+    if (e.evt.touches.length < 2) { lastDist = 0; lastCenter = null; }
+    if (e.evt.touches.length === 0) stage.draggable(true); // restore single-finger pan
+  });
 }
 
 // Fit to the boundary if present, otherwise to whatever elements exist.
