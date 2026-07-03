@@ -18,7 +18,9 @@ class VendorApproved extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Your VendorMap account is approved');
+        return new Envelope(
+            subject: $this->vendor->business_name . ' is approved on ' . config('vendormap.name', 'VendorMap'),
+        );
     }
 
     public function content(): Content

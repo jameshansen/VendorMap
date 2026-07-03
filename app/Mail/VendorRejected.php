@@ -18,7 +18,7 @@ class VendorRejected extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Update on your VendorMap application');
+        return new Envelope(subject: 'Update on your ' . config('vendormap.name', 'VendorMap') . ' application');
     }
 
     public function content(): Content

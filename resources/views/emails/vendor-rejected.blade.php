@@ -4,7 +4,8 @@
     <h2>Update on your application</h2>
     <p>Hi {{ $vendor->contact_name ?: $vendor->business_name }},</p>
     <p>Thank you for your interest. Unfortunately we're unable to approve your
-       VendorMap account at this time.</p>
+       {{ config('vendormap.name', 'VendorMap') }} account at this time. This was the application we received:</p>
+    @include('emails.partials.vendor-details')
     @if ($vendor->admin_notes)
         <p>{{ $vendor->admin_notes }}</p>
     @endif

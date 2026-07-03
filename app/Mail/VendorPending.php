@@ -18,7 +18,7 @@ class VendorPending extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Your VendorMap application is being reviewed');
+        return new Envelope(subject: 'Your ' . config('vendormap.name', 'VendorMap') . ' application is being reviewed');
     }
 
     public function content(): Content

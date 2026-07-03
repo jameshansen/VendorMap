@@ -4,7 +4,8 @@
     <h2>Thanks for signing up! 👋</h2>
     <p>Hi {{ $vendor->contact_name ?: $vendor->business_name }},</p>
     <p>We've received your application for <strong>{{ $vendor->business_name }}</strong> and it's now
-       pending approval.</p>
+       pending approval. Here are the details you submitted:</p>
+    @include('emails.partials.vendor-details')
     <p style="background:rgba(31,157,104,0.10); border:1px solid #1f9d68; color:#14613f;
        padding:14px 16px; border-radius:8px;">
         <strong>We review every request quickly, usually within 24 hours.</strong>
