@@ -20,6 +20,7 @@
             <tr><td><strong>Date</strong></td><td>{{ $event->starts_at->format('D j M Y, g:ia') }}</td></tr>
         @endif
         <tr><td><strong>Table</strong></td><td>{{ $table->label ?: ('#' . $table->id) }}</td></tr>
+        <tr><td><strong>Price</strong></td><td>${{ number_format((float) $table->price, 2) }}</td></tr>
     </table>
     <p>View your booking:
         <a href="{{ route('events.show', $event) }}">{{ route('events.show', $event) }}</a>
