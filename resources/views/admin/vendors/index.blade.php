@@ -66,6 +66,9 @@
                     <li>
                         <strong>{{ $vendor->business_name }}</strong>
                         <span class="muted">{{ $vendor->contact_name }} · {{ $vendor->email ?: $vendor->user?->email }}</span>
+                        @if (!empty($vendor->categories))
+                            <span class="muted">· {{ implode(', ', $vendor->categories) }}</span>
+                        @endif
                     </li>
                 @endforeach
             </ul>
@@ -79,6 +82,9 @@
                 @foreach ($rejected as $vendor)
                     <li>
                         <strong>{{ $vendor->business_name }}</strong>
+                        @if (!empty($vendor->categories))
+                            <span class="muted">{{ implode(', ', $vendor->categories) }}</span>
+                        @endif
                         <form method="POST" action="{{ route('admin.vendors.approve', $vendor) }}" class="inline-form">
                             @csrf
                             <button type="submit" class="link-muted">Re-approve</button>
