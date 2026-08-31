@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Vendor;
+use App\Support\VendorGuidance;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -27,6 +28,8 @@ class NewVendorSignup extends Mailable
         return new Content(view: 'emails.vendor-signup', with: [
             'vendor' => $this->vendor,
             'approveUrl' => URL::signedRoute('vendors.approve.link', $this->vendor),
+            // Admin-only recipient, so the AI guidance may be included here.
+            'guidance' => VendorGuidance::summary(),
         ]);
     }
 }

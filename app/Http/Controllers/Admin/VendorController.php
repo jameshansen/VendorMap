@@ -7,6 +7,7 @@ use App\Mail\VendorApproved;
 use App\Mail\VendorRejected;
 use App\Models\Vendor;
 use App\Support\Notify;
+use App\Support\VendorGuidance;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -19,6 +20,7 @@ class VendorController extends Controller
             'pending' => Vendor::with('user')->where('status', 'pending')->latest()->get(),
             'approved' => Vendor::with('user')->where('status', 'approved')->latest()->get(),
             'rejected' => Vendor::with('user')->where('status', 'rejected')->latest()->get(),
+            'guidance' => VendorGuidance::summary(),
         ]);
     }
 

@@ -99,6 +99,34 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AI vendor guidance (optional, via Ollama)
+    |--------------------------------------------------------------------------
+    | When enabled, admins get a short AI-written summary of the vendor category
+    | mix on the vendor approval page and in new-application emails: which
+    | categories are plentiful, which are sparse, and how approving the pending
+    | vendors would tilt the balance. Only admins ever see it — it is never
+    | shown to vendors or customers.
+    |
+    | Get an API key at https://ollama.com (Settings -> API keys). "url" may
+    | instead point at a self-hosted Ollama server (e.g. http://localhost:11434,
+    | leave api_key blank). The summary is cached and only regenerated when the
+    | vendor list actually changes.
+    */
+    'ai_guidance' => [
+        'enabled' => false,
+        'api_key' => '',                    // Ollama Cloud API key
+        'url'     => 'https://ollama.com',  // or your own Ollama server
+        'model'   => 'glm-5.2',             // any chat model your key/server offers
+
+        // Describe the vendor mix you WANT — the AI compares reality against
+        // this and warns you when approvals would drift from it. Examples:
+        //   'A balanced, varied mix of vendor categories, with no single category dominating.'
+        //   'Mostly baby and kids products; flag any vendor that does not fit that theme.'
+        'goal'    => 'A balanced, varied mix of vendor categories, with no single category dominating.',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Booking rules
     |--------------------------------------------------------------------------
     */

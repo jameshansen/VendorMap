@@ -18,11 +18,17 @@
                 <tr><td valign="top"><strong>{{ $label }}</strong></td><td>{{ $vendor->socials[$key] }}</td></tr>
             @endif
         @endforeach
-        <tr><td valign="top"><strong>Products</strong></td><td>{{ ! empty($vendor->categories) ? implode(', ', $vendor->categories) : '—' }}</td></tr>
+        <tr><td valign="top"><strong>Categories</strong></td><td>{{ ! empty($vendor->categories) ? implode(', ', $vendor->categories) : '—' }}</td></tr>
         <tr><td valign="top"><strong>Note</strong></td><td>{{ $vendor->application_note ?: '—' }}</td></tr>
         <tr><td valign="top"><strong>Status</strong></td><td>{{ ucfirst($vendor->status) }}</td></tr>
         <tr><td valign="top"><strong>Submitted</strong></td><td>{{ $vendor->created_at?->format('D j M Y, g:ia') ?? '—' }}</td></tr>
     </table>
+    @if (!empty($guidance))
+        <div style="margin:20px 0;padding:14px 18px;background:#f4f7ff;border-left:4px solid #2f6df0;border-radius:6px;">
+            <p style="margin:0 0 6px;font-weight:bold;">✨ AI Vendor Guidance</p>
+            <p style="margin:0;">{{ $guidance['text'] }}</p>
+        </div>
+    @endif
     <p style="margin:24px 0;">
         <a href="{{ $approveUrl }}" style="display:inline-block;background:#1f9d55;color:#fff;
            text-decoration:none;padding:12px 22px;border-radius:6px;font-weight:bold;">

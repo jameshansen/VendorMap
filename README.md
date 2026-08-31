@@ -30,6 +30,7 @@ The demo is a sandbox: every visitor gets their own isolated copy of the data, s
 - **Vendor accounts**: email/password or **Google** sign-in (Laravel Socialite). Sign-up collects business details + socials and is hardened against bots (honeypot, timing, optional reCAPTCHA). New accounts are **pending** until an admin approves them.
 - **Admin panel** (`/admin`): dashboard, full event CRUD, the designer, and a vendor approval queue. Approving/rejecting emails the vendor.
 - **Email notifications**: admin alert on new sign-ups, approval/rejection notices to vendors (best-effort; logged if SMTP isn't configured).
+- **AI Vendor Guidance** (optional): an AI-written summary of the vendor category mix for admins, on the approval page and in new-application emails (see [AI Vendor Guidance](#ai-vendor-guidance)).
 - **Single `config.php`**: site name, admin login, SMTP, Google keys, reCAPTCHA, booking rules and demo mode, all in one commented file.
 
 ## Tech stack
@@ -77,7 +78,34 @@ Serve the app with `php artisan serve` (or Laravel Herd, which serves it automat
 - **`google_oauth`** - Google sign-in keys. Blank `client_id` hides the Google button.
 - **`recaptcha`** - optional anti-bot keys for sign-up.
 - **`booking`** - `tables_per_vendor` and `auto_approve_booking`.
+- **`ai_guidance`** - optional AI summary of the vendor mix for admins, see below.
 - **`demo`** - see below.
+
+## AI Vendor Guidance
+
+An optional, admin-only helper for keeping the vendor line-up balanced. When enabled, the vendor approval page (and the "new vendor application" email sent to the admin) includes a short AI-written summary of the current category mix, along the lines of:
+
+> You have lots of Baked goods vendors, a few Candles and some Jewellery. If you approve the two pending Baked goods vendors you will have too many in that category. Sunny Softworks (pending) sells software consulting, which doesn't fit your market's theme.
+
+How it works:
+
+- The summary is generated from the approved-vendor category counts and the pending applications, using a model on [Ollama Cloud](https://ollama.com) (or any self-hosted [Ollama](https://ollama.com/download) server — same API).
+- It is cached and only regenerated when the vendor list actually changes (new application, approval, rejection), so the admin page stays fast and API usage stays minimal.
+- The **`goal`** setting steers the advice. By default it aims for a balanced mix, but you can describe any theme — e.g. `'Mostly baby and kids products; flag any vendor that does not fit that theme.'` — and the summary will warn about applicants that don't match.
+- It is **only ever shown to admins** (the admin panel and the admin notification email). Vendors and customers never see it.
+- If the API is unreachable the feature degrades gracefully: the last summary (or nothing) is shown and the problem is logged; approvals and sign-ups are never blocked.
+
+Enable it in `config.php` (get an API key from ollama.com → Settings → API keys):
+
+```php
+'ai_guidance' => [
+    'enabled' => true,
+    'api_key' => 'your-ollama-cloud-key',
+    'url'     => 'https://ollama.com',  // or e.g. 'http://localhost:11434' for self-hosted (blank api_key)
+    'model'   => 'glm-5.2',             // any chat model your key/server offers
+    'goal'    => 'A balanced, varied mix of vendor categories, with no single category dominating.',
+],
+```
 
 ## Demo mode
 

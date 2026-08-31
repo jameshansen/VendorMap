@@ -74,6 +74,13 @@ class ConfigBridgeServiceProvider extends ServiceProvider
                 'secret_key' => $cfg['recaptcha']['secret_key'] ?? '',
             ],
             'vendormap.smtp.admin_notify' => $cfg['smtp']['admin_notify'] ?? '',
+            'vendormap.ai_guidance' => [
+                'enabled' => (bool) ($cfg['ai_guidance']['enabled'] ?? false),
+                'api_key' => $cfg['ai_guidance']['api_key'] ?? '',
+                'url'     => rtrim($cfg['ai_guidance']['url'] ?? 'https://ollama.com', '/'),
+                'model'   => $cfg['ai_guidance']['model'] ?? 'glm-5.2',
+                'goal'    => $cfg['ai_guidance']['goal'] ?? '',
+            ],
         ]);
     }
 
