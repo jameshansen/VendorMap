@@ -72,10 +72,31 @@
     </section>
 
     <section class="panel-block">
-        <h2>Approved ({{ $approved->count() }})</h2>
+        @php $bookedCount = $approved->filter(fn ($v) => $tablesByVendor->has($v->id))->count(); @endphp
+        <div class="panel-head">
+            <h2>Approved ({{ $approved->count() }})</h2>
+            @if ($events->count() > 1)
+                <form method="GET" class="event-filter">
+                    <label for="event">Bookings for</label>
+                    <select name="event" id="event" class="venue-select" onchange="this.form.submit()">
+                        @foreach ($events as $e)
+                            <option value="{{ $e->id }}" @selected($event && $e->id === $event->id)>{{ $e->name }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
+        </div>
+
         @if ($approved->isEmpty())
             <p class="muted">None yet.</p>
         @else
+            @if ($event)
+                <p class="muted">{{ $bookedCount }} of {{ $approved->count() }} approved vendors have a table at
+                    <strong>{{ $event->name }}</strong>; {{ $approved->count() - $bookedCount }} have not booked.</p>
+            @else
+                <p class="muted">No events yet, so nobody has booked a table.</p>
+            @endif
+
             <table class="data-table">
                 <thead>
                     <tr>
@@ -84,16 +105,25 @@
                         <th>Email</th>
                         <th>Categories</th>
                         <th>Approved</th>
+                        <th>{{ $event ? 'Booking · ' . $event->name : 'Booking' }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($approved as $vendor)
+                        @php $tables = $tablesByVendor->get($vendor->id); @endphp
                         <tr>
                             <td><strong>{{ $vendor->business_name }}</strong></td>
                             <td>{{ $vendor->contact_name ?: '—' }}</td>
                             <td>{{ $vendor->email ?: $vendor->user?->email ?: '—' }}</td>
                             <td>{{ !empty($vendor->categories) ? implode(', ', $vendor->categories) : '—' }}</td>
                             <td class="muted">{{ $vendor->approved_at?->format('j M Y') ?? '—' }}</td>
+                            <td>
+                                @forelse ($tables ?? [] as $table)
+                                    <span class="badge badge-{{ $table->status }}">{{ $table->label }} · {{ $table->status }}</span>
+                                @empty
+                                    <span class="badge badge-available">Not booked</span>
+                                @endforelse
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
