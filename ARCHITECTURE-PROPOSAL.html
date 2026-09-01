@@ -1,0 +1,637 @@
+<title>VendorMap Three-Box Mockups</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground: #eef1f6;
+    --surface: #ffffff;
+    --surface-2: #f4f6fa;
+    --border: #d6dde7;
+    --ink: #131a24;
+    --muted: #5f6b7c;
+    --accent: #2f6df0;
+    --accent-soft: rgba(47, 109, 240, 0.09);
+    --manager: #6b4bd6;
+    --manager-soft: rgba(107, 75, 214, 0.1);
+    --accounts: #12806a;
+    --accounts-soft: rgba(18, 128, 106, 0.1);
+    --shadow: 0 1px 2px rgba(19,26,36,.05), 0 8px 24px rgba(19,26,36,.05);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0f141c;
+      --surface: #161d27;
+      --surface-2: #1c2532;
+      --border: #2a3546;
+      --ink: #e7ecf4;
+      --muted: #97a4b8;
+      --accent: #74a0ff;
+      --accent-soft: rgba(116,160,255,.13);
+      --manager: #a68cff;
+      --manager-soft: rgba(166,140,255,.14);
+      --accounts: #4fc2a5;
+      --accounts-soft: rgba(79,194,165,.14);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0f141c;
+    --surface: #161d27;
+    --surface-2: #1c2532;
+    --border: #2a3546;
+    --ink: #e7ecf4;
+    --muted: #97a4b8;
+    --accent: #74a0ff;
+    --accent-soft: rgba(116,160,255,.13);
+    --manager: #a68cff;
+    --manager-soft: rgba(166,140,255,.14);
+    --accounts: #4fc2a5;
+    --accounts-soft: rgba(79,194,165,.14);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: 'Hanken Grotesk', 'Segoe UI', system-ui, sans-serif;
+    font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1150px; margin: 0 auto; padding: 0 clamp(1.1rem, 4vw, 2.4rem); }
+
+  header.top { padding: clamp(2.8rem, 7vw, 4.6rem) 0 1.4rem; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .73rem; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted); margin: 0 0 1rem;
+    display: flex; align-items: center; gap: .7rem;
+  }
+  .eyebrow::before { content:""; width: 26px; height: 2px; background: var(--accent); border-radius: 2px; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.07; letter-spacing: -.032em; font-weight: 800;
+       margin: 0 0 1rem; max-width: 18ch; text-wrap: balance; }
+  .lede { font-size: clamp(1.02rem, 2vw, 1.18rem); color: var(--muted); max-width: 62ch; margin: 0; }
+
+  .key { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1.7rem 0 0; }
+  .key span {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .72rem; letter-spacing: .05em;
+    padding: .3rem .6rem; border-radius: 4px; border: 1px solid var(--border);
+  }
+  .k-event { color: var(--accent); background: var(--accent-soft); border-color: var(--accent); }
+  .k-manager { color: var(--manager); background: var(--manager-soft); border-color: var(--manager); }
+  .k-accounts { color: var(--accounts); background: var(--accounts-soft); border-color: var(--accounts); }
+
+  section { padding: clamp(2.4rem, 5vw, 3.6rem) 0 0; }
+  .shead { display: flex; align-items: baseline; gap: .8rem; flex-wrap: wrap; margin: 0 0 .4rem; }
+  .shead h2 { font-size: clamp(1.25rem, 2.7vw, 1.6rem); letter-spacing: -.022em; margin: 0; font-weight: 700; }
+  .owner {
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .7rem; letter-spacing: .06em;
+    text-transform: uppercase; padding: .2rem .5rem; border-radius: 4px; font-weight: 600;
+  }
+  .o-event { color: var(--accent); background: var(--accent-soft); }
+  .o-manager { color: var(--manager); background: var(--manager-soft); }
+  .o-accounts { color: var(--accounts); background: var(--accounts-soft); }
+  .snote { color: var(--muted); margin: 0 0 1.5rem; max-width: 64ch; font-size: .98rem; }
+  .scroll { overflow-x: auto; border-radius: 10px; }
+
+  /* ---------- VendorMap product skin (light in both themes, by design) ---------- */
+  .vm {
+    --vm-bg:#eef1f5; --vm-surface:#fff; --vm-surface2:#f1f4f8; --vm-border:#d6dde6;
+    --vm-text:#1b2430; --vm-muted:#64707f; --vm-accent:#2f6df0; --vm-red:#cf4b4b;
+    --vm-purple:#6b4bd6; --vm-green:#12806a;
+    background: var(--vm-bg); color: var(--vm-text); font-size: 14px; line-height: 1.5;
+    border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+    min-width: 700px; box-shadow: var(--shadow);
+  }
+  .vm * { box-sizing: border-box; }
+  .vm-nav { display:flex; align-items:center; gap:1.3rem; padding:0 1.1rem; height:52px;
+            background:var(--vm-surface); border-bottom:1px solid var(--vm-border); }
+  .vm-brand { display:flex; align-items:center; gap:.5rem; font-weight:700; font-size:.88rem; color:var(--vm-text); white-space:nowrap; }
+  .vm-brand .bulb { width:9px; height:9px; border-radius:50%; background:var(--vm-accent); }
+  .vm-brand.mgr .bulb { background:var(--vm-purple); }
+  .vm-brand.acc .bulb { background:var(--vm-green); }
+  .vm-brand small { color:var(--vm-muted); font-weight:500; font-size:.76rem; }
+  .vm-links { display:flex; gap:.25rem; }
+  .vm-links span { padding:.32rem .58rem; border-radius:6px; font-size:.8rem; color:var(--vm-muted); white-space:nowrap; }
+  .vm-links span.on { background:var(--vm-accent); color:#fff; font-weight:600; }
+  .mgr .vm-links span.on, .vm-links span.on.mgr { background:var(--vm-purple); }
+  .acc .vm-links span.on, .vm-links span.on.acc { background:var(--vm-green); }
+  .vm-right { margin-left:auto; display:flex; align-items:center; gap:.7rem; font-size:.79rem; color:var(--vm-muted); white-space:nowrap; }
+  .vm-main { padding:1.15rem 1.25rem; display:grid; gap:.95rem; }
+  .vm h1 { font-size:1.28rem; margin:0; letter-spacing:-.02em; font-weight:700; color:var(--vm-text); max-width:none; }
+  .vm h2 { font-size:.95rem; margin:0 0 .75rem; color:var(--vm-text); letter-spacing:-.01em; }
+  .vm h3 { font-size:.9rem; margin:0; color:var(--vm-text); }
+  .vm p { margin:0; }
+  .vm .muted { color:var(--vm-muted); font-size:.83rem; }
+  .vm .mono { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:.77rem; }
+  .vm-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  .vm-panel { background:var(--vm-surface); border:1px solid var(--vm-border); border-radius:10px; padding:1.05rem 1.15rem; }
+  .vm-note { background:var(--vm-surface); border:1px solid var(--vm-border); border-left:3px solid var(--vm-accent);
+             border-radius:10px; padding:.9rem 1.1rem; }
+  .vm-note.green { border-left-color:var(--vm-green); }
+  .vm-note.purple { border-left-color:var(--vm-purple); }
+  .vm-note.red { border-left-color:var(--vm-red); }
+  .vm-note .t { font-weight:700; font-size:.86rem; margin-bottom:.25rem; }
+
+  .vm table { width:100%; border-collapse:collapse; background:var(--vm-surface); }
+  .vm th, .vm td { text-align:left; padding:.55rem .7rem; border-bottom:1px solid var(--vm-border); font-size:.83rem; }
+  .vm th { background:var(--vm-surface2); color:var(--vm-muted); font-size:.67rem; text-transform:uppercase;
+           letter-spacing:.05em; font-weight:600; }
+  .vm tr:last-child td { border-bottom:none; }
+  .vm-tw { border:1px solid var(--vm-border); border-radius:10px; overflow:hidden; }
+
+  .pill { display:inline-block; padding:.13rem .5rem; border-radius:999px; font-size:.69rem; font-weight:600; white-space:nowrap; }
+  .p-live   { background:rgba(31,157,104,.16); color:#14613f; }
+  .p-draft  { background:#f1f4f8; color:#64707f; }
+  .p-arch   { background:rgba(107,75,214,.13); color:#4b32a0; }
+  .p-ok     { background:rgba(31,157,104,.16); color:#14613f; }
+  .p-warn   { background:rgba(201,145,42,.16); color:#7a5708; }
+  .p-no     { background:rgba(207,75,75,.14); color:#8a2b2b; }
+  .p-info   { background:rgba(47,109,240,.12); color:#1d47a8; }
+
+  .btn { display:inline-block; background:var(--vm-accent); color:#fff; font-weight:600; border-radius:7px;
+         padding:.42rem .85rem; font-size:.81rem; }
+  .btn.mgr { background:var(--vm-purple); }
+  .btn.ghost { background:transparent; color:var(--vm-muted); border:1px solid var(--vm-border); }
+  .btn.red { background:var(--vm-red); }
+
+  .field { display:grid; gap:.22rem; }
+  .field label { font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--vm-muted); font-weight:600; }
+  .input { border:1px solid var(--vm-border); background:var(--vm-surface); border-radius:7px;
+           padding:.44rem .6rem; font-size:.84rem; color:var(--vm-text); }
+  .input.pre { border-color:var(--vm-accent); background:rgba(47,109,240,.045); }
+  .input.ph { color:var(--vm-muted); }
+  .g2 { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; }
+  .g3 { display:grid; grid-template-columns:repeat(3,1fr); gap:.65rem; }
+  .chips { display:flex; gap:.32rem; flex-wrap:wrap; }
+  .chip { background:var(--vm-surface2); border-radius:999px; padding:.17rem .55rem; font-size:.74rem; color:var(--vm-muted); }
+  .chip.on { background:rgba(47,109,240,.1); color:#1d47a8; border:1px solid var(--vm-accent); }
+
+  .steps { display:flex; gap:.35rem; align-items:center; font-size:.74rem; color:var(--vm-muted); flex-wrap:wrap; }
+  .steps .s { padding:.2rem .5rem; border-radius:999px; background:var(--vm-surface2); }
+  .steps .s.on { background:var(--vm-accent); color:#fff; font-weight:600; }
+  .steps .s.on.mgr { background:var(--vm-purple); }
+  .steps .s.done { background:rgba(31,157,104,.16); color:#14613f; }
+
+  .tl { display:grid; gap:.4rem; }
+  .tl div { display:grid; grid-template-columns:auto 1fr auto; gap:.7rem; align-items:baseline;
+            padding:.45rem .6rem; background:var(--vm-surface2); border-radius:7px; font-size:.83rem; }
+  .tl .yr { font-family:'JetBrains Mono', ui-monospace, monospace; font-weight:600; color:var(--vm-text); }
+
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:.65rem; }
+  .stat { background:var(--vm-surface); border:1px solid var(--vm-border); border-radius:10px; padding:.8rem .9rem; }
+  .stat .n { font-size:1.4rem; font-weight:700; letter-spacing:-.03em; display:block; font-variant-numeric:tabular-nums; color:var(--vm-text); }
+  .stat .l { font-size:.74rem; color:var(--vm-muted); }
+
+  .flow { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; font-size:.78rem; color:var(--vm-muted);
+          font-family:'JetBrains Mono', ui-monospace, monospace; }
+  .flow b { color:var(--vm-text); font-weight:600; }
+  .flow .box { padding:.25rem .55rem; border-radius:6px; border:1px solid var(--vm-border); background:var(--vm-surface); }
+  .flow .box.e { border-color:var(--vm-accent); color:var(--vm-accent); }
+  .flow .box.a { border-color:var(--vm-green); color:var(--vm-green); }
+  .flow .box.m { border-color:var(--vm-purple); color:var(--vm-purple); }
+
+  footer { margin-top: clamp(2.6rem, 6vw, 4rem); padding: 1.6rem 0 3.2rem; border-top: 1px solid var(--border); }
+  footer p { color: var(--muted); font-size: .9rem; margin: 0; max-width: 66ch; }
+  @media (prefers-reduced-motion: reduce) { * { animation:none !important; transition:none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">VendorMap · UI concepts · Sept 2026</p>
+    <h1>Three boxes, five screens</h1>
+    <p class="lede">
+      Interface sketches for the split architecture: a Manager that deploys events, an Event box that runs one
+      market and is then thrown away, and an Accounts service that remembers vendors across all of them. The
+      written spec lives in ARCHITECTURE-PROPOSAL.md; this is only what it looks like.
+    </p>
+    <p class="key">
+      <span class="k-manager">Manager</span>
+      <span class="k-event">Event</span>
+      <span class="k-accounts">Accounts</span>
+    </p>
+  </header>
+
+  <section>
+    <div class="shead"><h2>1. Every market, past and future</h2><span class="owner o-manager">Manager</span></div>
+    <p class="snote">
+      The organiser's home. Boxes, not events: each row is a separate deployment with its own database, and
+      exactly one of them is serving the public booking address at any time. Nothing here can approve a vendor
+      or move a table, and that separation is the point.
+    </p>
+    <div class="scroll">
+      <div class="vm">
+        <div class="vm-nav">
+          <span class="vm-brand mgr"><i class="bulb"></i> VendorMap Manager <small>JKE PAC</small></span>
+          <span class="vm-links">
+            <span class="on mgr">Events</span><span>Settings</span><span>Archives</span><span>Accounts service</span>
+          </span>
+          <span class="vm-right">jkepac · Sign out</span>
+        </div>
+        <div class="vm-main">
+          <div class="vm-head">
+            <h1>Events</h1>
+            <span class="btn mgr">Deploy new event</span>
+          </div>
+
+          <div class="vm-tw">
+            <table>
+              <thead>
+                <tr><th>Event</th><th>Runs</th><th>Serving at</th><th>State</th><th>Vendors</th><th>Tables</th><th></th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Christmas Market 2026</strong><div class="muted mono">christmas-2026</div></td>
+                  <td>21 Nov 2026</td>
+                  <td class="mono"><strong>/booking</strong></td>
+                  <td><span class="pill p-live">Live</span></td>
+                  <td>22 approved · 5 pending</td>
+                  <td>13 of 45</td>
+                  <td class="muted">Open · Settings</td>
+                </tr>
+                <tr>
+                  <td><strong>Christmas Market 2027</strong><div class="muted mono">christmas-2027</div></td>
+                  <td>20 Nov 2027</td>
+                  <td class="mono">/booking/preview/christmas-2027</td>
+                  <td><span class="pill p-warn">Staged</span></td>
+                  <td class="muted">not open yet</td>
+                  <td>45 copied</td>
+                  <td class="muted"><strong>Go live</strong> · Preview</td>
+                </tr>
+                <tr>
+                  <td><strong>Spring Fair 2027</strong><div class="muted mono">spring-2027</div></td>
+                  <td>18 Apr 2027</td>
+                  <td class="muted">not deployed</td>
+                  <td><span class="pill p-draft">Draft</span></td>
+                  <td class="muted">not open yet</td>
+                  <td class="muted">no layout</td>
+                  <td class="muted">Deploy · Edit</td>
+                </tr>
+                <tr>
+                  <td><strong>Christmas Market 2025</strong><div class="muted mono">christmas-2025</div></td>
+                  <td>22 Nov 2025</td>
+                  <td class="mono">/booking/past/christmas-2025</td>
+                  <td><span class="pill p-arch">Archived · public</span></td>
+                  <td>19 approved · 3 rejected</td>
+                  <td>36 of 40</td>
+                  <td class="muted">Browse · Download · Freeze</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="vm-note">
+            <p class="t">One address, always</p>
+            <p class="muted">
+              <span class="mono">jkepac.ca/booking</span> serves whichever event is live, so the address on your
+              posters never changes. Going live moves the outgoing market to its own
+              <span class="mono">/booking/past/…</span> path and makes it read only. Nothing is deleted, and the
+              flip can be reversed.
+            </p>
+          </div>
+
+          <div class="vm-note green">
+            <p class="t">Accounts service: healthy</p>
+            <p class="muted">
+              34 vendor profiles · 112 application records across 4 events · last sync 40 seconds ago.
+              Shared by every box above.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>2. Staging next year's market</h2><span class="owner o-manager">Manager</span></div>
+    <p class="snote">
+      Creating an event means provisioning a container, a database and an API key. The organiser sees a form,
+      not a terminal. Copying last year's floor plan is the step that saves the most work, and the one most
+      likely to carry a bug forward if booked tables are not reset. Note that staging and going live are
+      separate: this form never disturbs the market currently running.
+    </p>
+    <div class="scroll">
+      <div class="vm">
+        <div class="vm-nav">
+          <span class="vm-brand mgr"><i class="bulb"></i> VendorMap Manager <small>JKE PAC</small></span>
+          <span class="vm-links"><span class="on mgr">Events</span><span>Settings</span><span>Archives</span></span>
+          <span class="vm-right">jkepac · Sign out</span>
+        </div>
+        <div class="vm-main">
+          <div class="vm-head">
+            <h1>Deploy new event</h1>
+            <div class="steps">
+              <span class="s done">1 · Details</span><span>→</span>
+              <span class="s done">2 · Floor plan</span><span>→</span>
+              <span class="s on mgr">3 · Rules</span><span>→</span>
+              <span class="s">4 · Deploy</span>
+            </div>
+          </div>
+
+          <div class="vm-panel">
+            <h2>Details</h2>
+            <div class="g2" style="margin-bottom:.65rem">
+              <div class="field"><label>Event name</label><div class="input">Christmas Market 2027</div></div>
+              <div class="field"><label>Held on</label><div class="input">20 November 2027</div></div>
+            </div>
+            <div class="g2" style="margin-bottom:.6rem">
+              <div class="field"><label>Short key</label><div class="input mono">christmas-2027</div></div>
+              <div class="field"><label>Registration opens</label><div class="input">1 September 2027</div></div>
+            </div>
+            <p class="muted">
+              The key is only used in paths and archives. When this event goes live it serves
+              <span class="mono">jkepac.ca/booking</span>, the same address as every other year.
+            </p>
+          </div>
+
+          <div class="vm-panel">
+            <h2>Floor plan</h2>
+            <div class="g2" style="margin-bottom:.6rem">
+              <div class="field"><label>Start from</label><div class="input">Copy of Christmas Market 2026</div></div>
+              <div class="field"><label>Result</label><div class="input ph">45 tables, 2 doors, 1 power drop</div></div>
+            </div>
+            <p class="muted">All copied tables start as available. No bookings, holds or payment records come across.</p>
+          </div>
+
+          <div class="vm-panel">
+            <h2>Rules for this event</h2>
+            <div class="g3" style="margin-bottom:.65rem">
+              <div class="field"><label>Tables per vendor</label><div class="input">1</div></div>
+              <div class="field"><label>Booking</label><div class="input">Hold for admin approval</div></div>
+              <div class="field"><label>Cancellation until</label><div class="input">6 Nov 2027</div></div>
+            </div>
+            <div class="field">
+              <label>AI guidance goal for this event</label>
+              <div class="input">A balanced mix, with no single category dominating. Favour returning vendors who attended.</div>
+            </div>
+            <p class="muted" style="margin-top:.5rem">
+              Set per event, not globally. A spring fair and a Christmas market want different mixes.
+            </p>
+          </div>
+
+          <div class="vm-note purple">
+            <p class="t">What happens when you deploy</p>
+            <p class="muted" style="margin-bottom:.55rem">
+              Creates the database, runs migrations, issues an Accounts API key scoped to this event and starts
+              the container at <span class="mono">/booking/preview/christmas-2027</span>, visible only to you.
+              Roughly 40 seconds.
+            </p>
+            <p class="muted" style="margin-bottom:.55rem">
+              It does not touch the market currently running. Set up the floor plan, check it over, then press
+              <strong>Go live</strong> when you are ready: that is a separate step, it takes about a second, and
+              it can be reversed.
+            </p>
+            <span class="btn mgr">Stage Christmas Market 2027</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>3. Signing up for one specific market</h2><span class="owner o-event">Event</span></div>
+    <p class="snote">
+      The vendor's view, after clicking the emailed verification link. The heading names the event because the
+      application belongs to the event, not to VendorMap in general. Details arrive prefilled from Accounts, and
+      the page is explicit about where they came from and that this is a fresh application.
+    </p>
+    <div class="scroll">
+      <div class="vm">
+        <div class="vm-nav">
+          <span class="vm-brand"><i class="bulb"></i> Christmas Market 2027 <small>James Kennedy PAC</small></span>
+          <span class="vm-right">Linda Braun · Sign out</span>
+        </div>
+        <div class="vm-main" style="max-width:660px">
+          <h1>Sign up for Christmas Market 2027</h1>
+          <p class="muted">Saturday 20 November 2027, James Kennedy Elementary. Applications close 1 November.</p>
+
+          <div class="vm-note green">
+            <p class="t">Welcome back, Lather Up</p>
+            <p class="muted">
+              We have filled this in from your last application. You came to the 2026 market and had table T12.
+              Please check everything is still right, then submit. The organiser reviews every application for
+              each market, so this is a fresh sign up rather than an automatic place.
+            </p>
+          </div>
+
+          <div class="vm-panel">
+            <div class="g2" style="margin-bottom:.65rem">
+              <div class="field"><label>Business name</label><div class="input pre">Lather Up</div></div>
+              <div class="field"><label>Contact name</label><div class="input pre">Linda Braun</div></div>
+            </div>
+            <div class="g2" style="margin-bottom:.65rem">
+              <div class="field"><label>Email</label><div class="input mono ph">lbraun1@hotmail.com · verified</div></div>
+              <div class="field"><label>Phone</label><div class="input pre">604 555 0142</div></div>
+            </div>
+            <div class="field" style="margin-bottom:.65rem">
+              <label>What do you sell?</label>
+              <div class="chips">
+                <span class="chip on">Body soap ×</span><span class="chip on">Dish soap bars ×</span>
+                <span class="chip on">Gift baskets ×</span><span class="chip">+ add</span>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:.75rem">
+              <label>Anything else for the organiser?</label>
+              <div class="input ph">Optional. Tell us about new products this year.</div>
+            </div>
+            <div style="display:flex; gap:.6rem; align-items:center">
+              <span class="btn">Submit application</span>
+              <span class="muted">You will hear back by email.</span>
+            </div>
+          </div>
+
+          <p class="flow">
+            <span class="box a">Accounts</span> prefilled this form ·
+            <span class="box e">Event</span> decides whether you are in
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>4. Approving, with history in view</h2><span class="owner o-event">Event</span></div>
+    <p class="snote">
+      The organiser's approval queue inside one event box. Each applicant carries their record from Accounts, so
+      a decision can be made knowing what happened at previous markets. The decision itself is local: approving
+      here says nothing about any other event.
+    </p>
+    <div class="scroll">
+      <div class="vm">
+        <div class="vm-nav">
+          <span class="vm-brand"><i class="bulb"></i> Christmas Market 2027 <small>admin</small></span>
+          <span class="vm-links">
+            <span>Overview</span><span class="on">Applications</span><span>Bookings</span>
+            <span>Floor plan</span><span>Categories</span><span>Conditions</span>
+          </span>
+          <span class="vm-right">Manager · Sign out</span>
+        </div>
+        <div class="vm-main">
+          <div class="vm-head">
+            <h1>Applications</h1>
+            <span class="muted">5 waiting · 22 approved · 41 of 45 tables sold</span>
+          </div>
+
+          <div class="stats">
+            <div class="stat"><span class="n">5</span><span class="l">Waiting</span></div>
+            <div class="stat"><span class="n">3</span><span class="l">Returning vendors</span></div>
+            <div class="stat"><span class="n">1</span><span class="l">Flagged in Accounts</span></div>
+            <div class="stat"><span class="n">41/45</span><span class="l">Tables sold</span></div>
+          </div>
+
+          <div class="vm-note">
+            <p class="t">✨ AI guidance for this event</p>
+            <p class="muted">
+              You have lots of baked goods and handmade crafts, a few candle makers and some jewellery. Approving
+              both pending baked goods vendors would leave that category over represented. Sunny Softworks sells
+              software consulting, which does not fit this market.
+            </p>
+          </div>
+
+          <div class="vm-panel">
+            <h2>Waiting for a decision</h2>
+            <div style="display:grid; gap:.6rem">
+
+              <div style="border:1px solid var(--vm-border); border-radius:9px; padding:.85rem .95rem">
+                <div class="vm-head" style="margin-bottom:.45rem">
+                  <h3>Lather Up <span class="pill p-info">Returning · 3rd market</span></h3>
+                  <span class="muted mono">applied 2 days ago</span>
+                </div>
+                <div class="chips" style="margin-bottom:.55rem">
+                  <span class="chip">Body soap</span><span class="chip">Dish soap bars</span><span class="chip">Gift baskets</span>
+                </div>
+                <div class="tl" style="margin-bottom:.6rem">
+                  <div><span class="yr">2026</span><span>Approved, attended, table T12, paid</span><span class="pill p-ok">Attended</span></div>
+                  <div><span class="yr">2025</span><span>Approved, attended, table T09, paid</span><span class="pill p-ok">Attended</span></div>
+                  <div><span class="yr">2024</span><span>Approved, attended, table T15, paid</span><span class="pill p-ok">Attended</span></div>
+                </div>
+                <div style="display:flex; gap:.6rem; align-items:center">
+                  <span class="btn">Approve for this market</span><span class="muted">Reject</span>
+                </div>
+              </div>
+
+              <div style="border:1px solid var(--vm-border); border-radius:9px; padding:.85rem .95rem">
+                <div class="vm-head" style="margin-bottom:.45rem">
+                  <h3>Sunny Softworks <span class="pill p-no">Flagged: do not accept</span></h3>
+                  <span class="muted mono">applied 6 hours ago</span>
+                </div>
+                <div class="chips" style="margin-bottom:.55rem"><span class="chip">Software consulting</span></div>
+                <div class="tl" style="margin-bottom:.6rem">
+                  <div><span class="yr">2026</span><span>Rejected: services, not goods</span><span class="pill p-no">Rejected</span></div>
+                  <div><span class="yr">2025</span><span>Rejected: not a market fit</span><span class="pill p-no">Rejected</span></div>
+                </div>
+                <p class="muted" style="margin-bottom:.6rem">
+                  Flag set in Accounts by an organiser. Advisory only, you can still approve them.
+                </p>
+                <div style="display:flex; gap:.6rem; align-items:center">
+                  <span class="btn ghost">Approve anyway</span><span class="btn red">Reject</span>
+                </div>
+              </div>
+
+              <div style="border:1px solid var(--vm-border); border-radius:9px; padding:.85rem .95rem">
+                <div class="vm-head" style="margin-bottom:.45rem">
+                  <h3>Heartstone Critters <span class="pill p-draft">First time</span></h3>
+                  <span class="muted mono">applied 1 day ago</span>
+                </div>
+                <div class="chips" style="margin-bottom:.55rem">
+                  <span class="chip">Handcrafted stuffed animals</span><span class="chip">Mini backpacks</span>
+                </div>
+                <p class="muted" style="margin-bottom:.6rem">No previous markets. Website and Instagram provided.</p>
+                <div style="display:flex; gap:.6rem; align-items:center">
+                  <span class="btn">Approve for this market</span><span class="muted">Reject</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="shead"><h2>5. One vendor, every market</h2><span class="owner o-accounts">Accounts</span></div>
+    <p class="snote">
+      The ground truth record. It holds who a vendor is and what happened each time they applied, and nothing
+      else. No approvals, no tables, no payments: those belong to the event box that created them. Written to by
+      every box, owned by none of them.
+    </p>
+    <div class="scroll">
+      <div class="vm">
+        <div class="vm-nav">
+          <span class="vm-brand acc"><i class="bulb"></i> VendorMap Accounts <small>JKE PAC</small></span>
+          <span class="vm-links"><span class="on acc">Profiles</span><span>Activity</span><span>API keys</span></span>
+          <span class="vm-right">jkepac · Sign out</span>
+        </div>
+        <div class="vm-main">
+          <div class="vm-head">
+            <h1>Lather Up</h1>
+            <span class="pill p-info">Favourite</span>
+          </div>
+
+          <div class="vm-panel">
+            <h2>Profile</h2>
+            <div class="g3" style="margin-bottom:.6rem">
+              <div class="field"><label>Contact</label><div class="input ph">Linda Braun</div></div>
+              <div class="field"><label>Email</label><div class="input mono ph">lbraun1@hotmail.com</div></div>
+              <div class="field"><label>Phone</label><div class="input ph">604 555 0142</div></div>
+            </div>
+            <div class="chips">
+              <span class="chip">Body soap</span><span class="chip">Dish soap bars</span><span class="chip">Gift baskets</span>
+            </div>
+            <p class="muted" style="margin-top:.6rem">
+              First seen November 2024 · last updated by <span class="mono">christmas-2027</span> two days ago
+            </p>
+          </div>
+
+          <div class="vm-panel">
+            <h2>Application history</h2>
+            <div class="vm-tw">
+              <table>
+                <thead><tr><th>Event box</th><th>Held</th><th>Outcome</th><th>Note from organiser</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">christmas-2027</td><td>20 Nov 2027</td>
+                    <td><span class="pill p-warn">Pending</span></td><td class="muted">awaiting decision</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">christmas-2026</td><td>21 Nov 2026</td>
+                    <td><span class="pill p-ok">Attended</span></td><td class="muted">table T12, paid on the day</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">christmas-2025</td><td>22 Nov 2025</td>
+                    <td><span class="pill p-ok">Attended</span></td><td class="muted">table T09, popular stall</td>
+                  </tr>
+                  <tr>
+                    <td class="mono">christmas-2024</td><td>23 Nov 2024</td>
+                    <td><span class="pill p-ok">Attended</span></td><td class="muted">first market with us</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="vm-note green">
+            <p class="t">Standing</p>
+            <p class="muted" style="margin-bottom:.55rem">
+              Marked <strong>Favourite</strong> by an organiser. Shown to whoever reviews their next application.
+              It never approves or rejects anyone on its own.
+            </p>
+            <div class="flow">
+              <span class="box">Normal</span><span class="box a">Favourite</span><span class="box">Do not accept</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      Sketches only, nothing is built. The decision these are meant to support is whether the split is worth the
+      operational cost of three services instead of one, which the written spec argues both sides of.
+    </p>
+  </footer>
+
+</div>

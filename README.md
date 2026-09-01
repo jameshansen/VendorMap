@@ -11,6 +11,12 @@ Since this is hosted on my Ubuntu Linux Webserver, I chose to use PHP as the lan
 
 This project is still in development, with work ongoing to refine and improve it.
 
+## Planned architecture change
+
+The 2026 Christmas Market is the first real run of this software, and it is being treated as a test run. Following it, VendorMap will be reworked into three services: a **Manager** that deploys and configures events, an **Event** box that runs exactly one market and is archived when it finishes, and an **Accounts** service that holds vendor identity and history across every event. Approval becomes per event, vendors sign up for a specific market with their details prefilled from their previous applications, and the public booking address stays the same every year.
+
+The full specification is in [ARCHITECTURE-PROPOSAL.md](ARCHITECTURE-PROPOSAL.md), with interface sketches in [ARCHITECTURE-PROPOSAL.html](ARCHITECTURE-PROPOSAL.html). Nothing in it is implemented yet, and none of it will land until after the November 2026 market. The current single-application setup documented below is what runs today and is what the market will be run on.
+
 ## Live demo
 
 **https://vendormap.jameshansen.org**
@@ -89,9 +95,9 @@ An optional, admin-only helper for keeping the vendor line-up balanced. When ena
 
 How it works:
 
-- The summary is generated from the approved-vendor category counts and the pending applications, using a model on [Ollama Cloud](https://ollama.com) (or any self-hosted [Ollama](https://ollama.com/download) server — same API).
+- The summary is generated from the approved-vendor category counts and the pending applications, using a model on [Ollama Cloud](https://ollama.com) (or any self-hosted [Ollama](https://ollama.com/download) server, same API).
 - It is cached and only regenerated when the vendor list actually changes (new application, approval, rejection), so the admin page stays fast and API usage stays minimal.
-- The **`goal`** setting steers the advice. By default it aims for a balanced mix, but you can describe any theme — e.g. `'Mostly baby and kids products; flag any vendor that does not fit that theme.'` — and the summary will warn about applicants that don't match.
+- The **`goal`** setting steers the advice. By default it aims for a balanced mix, but you can describe any theme, e.g. `'Mostly baby and kids products; flag any vendor that does not fit that theme.'`, and the summary will warn about applicants that don't match.
 - It is **only ever shown to admins** (the admin panel and the admin notification email). Vendors and customers never see it.
 - If the API is unreachable the feature degrades gracefully: the last summary (or nothing) is shown and the problem is logged; approvals and sign-ups are never blocked.
 

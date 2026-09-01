@@ -2,6 +2,11 @@
 
 Planned work that is **not** implemented yet. Deliberately deferred — see each entry for why.
 
+> **Superseded in part.** The account-versus-booking split below is now addressed differently by the
+> three-service design in [ARCHITECTURE-PROPOSAL.md](ARCHITECTURE-PROPOSAL.md), where per-event boxes make
+> approval per-event by construction. The problem statement here still holds and is worth reading first; the
+> proposed solution is the one in the architecture proposal.
+
 ## Separate vendor screening from booking screening
 
 **Status:** deferred until after the 2026 Christmas Market (too large a change to land with an event imminent).
