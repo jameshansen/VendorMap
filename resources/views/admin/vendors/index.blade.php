@@ -106,6 +106,7 @@
                         <th>Categories</th>
                         <th>Approved</th>
                         <th>{{ $event ? 'Booking · ' . $event->name : 'Booking' }}</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -123,6 +124,14 @@
                                 @empty
                                     <span class="badge badge-available">Not booked</span>
                                 @endforelse
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ route('admin.vendors.move-rejected', $vendor) }}"
+                                      class="inline-form"
+                                      onsubmit="return confirm('Move this vendor to rejected? Any table they hold is released. No email is sent.')">
+                                    @csrf
+                                    <button type="submit" class="link-danger">Move to rejected</button>
+                                </form>
                             </td>
                         </tr>
                     @endforeach

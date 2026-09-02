@@ -12,6 +12,7 @@ use App\Support\Notify;
 use App\Support\VendorGuidance;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class VendorController extends Controller
@@ -90,6 +91,43 @@ class VendorController extends Controller
         Notify::mail($this->vendorEmail($vendor), new VendorRejected($vendor));
 
         return back()->with('status', "{$vendor->business_name} rejected.");
+    }
+
+    /**
+     * Quietly move a vendor to rejected: releases any table they hold so it is
+     * free for someone else, and deliberately sends NO email. Used when a place
+     * is withdrawn administratively rather than an application being refused.
+     */
+    public function moveToRejected(Request $request, Vendor $vendor): RedirectResponse
+    {
+        $released = DB::transaction(function () use ($request, $vendor) {
+            $tables = EventTable::where('vendor_id', $vendor->id)->get();
+
+            foreach ($tables as $table) {
+                $table->update([
+                    'vendor_id' => null,
+                    'status' => 'available',
+                    'booked_at' => null,
+                    'paid' => false,
+                    'paid_at' => null,
+                    'terms_accepted_at' => null,
+                ]);
+            }
+
+            $vendor->update([
+                'status' => 'rejected',
+                'admin_notes' => $request->input('admin_notes', $vendor->admin_notes),
+            ]);
+
+            return $tables->pluck('label')->all();
+        });
+
+        // No Notify::mail call here on purpose: this action must stay silent.
+        $note = $released
+            ? ' Released ' . (count($released) === 1 ? 'table ' : 'tables ') . implode(', ', $released) . '.'
+            : '';
+
+        return back()->with('status', "{$vendor->business_name} moved to rejected. No email sent.{$note}");
     }
 
     private function vendorEmail(Vendor $vendor): ?string

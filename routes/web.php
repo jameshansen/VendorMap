@@ -107,5 +107,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('vendors', [AdminVendorController::class, 'index'])->name('vendors.index');
         Route::post('vendors/{vendor}/approve', [AdminVendorController::class, 'approve'])->name('vendors.approve');
         Route::post('vendors/{vendor}/reject', [AdminVendorController::class, 'reject'])->name('vendors.reject');
+        // Silent withdrawal: frees any table they hold, sends no email.
+        Route::post('vendors/{vendor}/move-rejected', [AdminVendorController::class, 'moveToRejected'])->name('vendors.move-rejected');
     });
 });
